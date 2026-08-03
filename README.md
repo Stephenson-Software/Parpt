@@ -1,12 +1,16 @@
 # Parpt - Project Audit & Revenue Prioritization Tool
+
+[![CI Pipeline](https://github.com/Stephenson-Software/Parpt/actions/workflows/ci.yml/badge.svg)](https://github.com/Stephenson-Software/Parpt/actions/workflows/ci.yml)
+[![Build and Test](https://github.com/Stephenson-Software/Parpt/actions/workflows/build.yml/badge.svg)](https://github.com/Stephenson-Software/Parpt/actions/workflows/build.yml)
+
 Parpt is an interactive CLI tool that helps developers, indie creators and teams evaluate and prioritize their software projects using structured metrics like ICE and RICE.
 
 ## Features
 - Guided project scoring using ICE and RICE methods
 - Calculate ICE (Impact, Confidence, Ease) scores
 - Calculate RICE (Reach, Impact, Confidence, Effort) scores
-- Save project entries to Markdown and JSON
-- Obsidian-compatible for review workflows
+- Export projects to Markdown and JSON formats
+- Obsidian-compatible markdown export with sorting by ICE/RICE scores
 - Rank and sort projects by monetization, potential, feasibility and effort
 - Spring Boot architecture with interactive shell
 - 100% local-first and open source
@@ -30,19 +34,37 @@ java -jar build/libs/parpt.jar
 Run the CLI:
 java -jar parpt.jar
 
+Available commands:
+- `create` - Create a new project with guided scoring
+- `list` - List all projects with scores
+- `view <project-name>` - View detailed project information
+- `export` - Export all projects to Markdown format
+- `help` - Show available commands
+
 You'll be prompted to enter:
 - Project name and description
 - Detailed scoring for each category (1-5 scale)
 - Parpt will then:
     - Calculate ICE and RICE scores
-    - Save the results to `projects.json` and `projects.md`
+    - Save the results to `projects.json`
+    - Allow you to export to `projects.md` sorted by priority
     - Help you sort and review your efforts over time
 
+### Export Examples
+```bash
+# Export projects sorted by ICE score (default)
+export
+
+# Export projects sorted by RICE score
+export --sort rice
+```
+
 ## Roadmap
-- [ ] Project input and validation loop
-- [ ] Score calculation engine
-- [ ] Markdown and JSON writer modules
-- [ ] CLI configuration and persistence
+- [x] Project input and validation loop
+- [x] Score calculation engine
+- [x] Markdown and JSON writer modules
+- [x] CLI configuration and persistence
+- [x] Obsidian-compatible markdown export with sorting
 - [ ] Visualization of project scores
 - [ ] Batch project comparison features
 

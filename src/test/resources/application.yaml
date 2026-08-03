@@ -39,3 +39,4 @@ parpt:
 app:
   projects:
     file: test-projects.json
+    markdown-file: test-projects.md
