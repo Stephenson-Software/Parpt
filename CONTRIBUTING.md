@@ -23,7 +23,7 @@ To run the full build (including tests):
 ## Continuous Integration
 This project uses GitHub Actions for continuous integration. All pull requests and pushes to main/develop branches will automatically:
 - Build the project with Java 21
-- Run all unit tests (currently 61 tests)
+- Run all unit tests (currently 58 tests)
 - Generate test reports and artifacts
 - Validate the Gradle wrapper
 
@@ -36,4 +36,4 @@ The CI pipeline ensures code quality by:
 Make sure all tests pass locally before submitting a pull request. The CI checks must pass before merging.
 
 ## License
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions will be licensed under the project's [Stephenson Software Non-Commercial License (Stephenson-NC)](https://github.com/Stephenson-Software/stephenson-nc-license), as described in [LICENSE](LICENSE).
