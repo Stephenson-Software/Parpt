@@ -25,14 +25,14 @@ Each project is evaluated across 5 dimensions using a detailed 1-5 scoring syste
 
 ## Installation
 Clone and build manually:
-git clone https://www.github.com/Preponderous/Parpt.git
+git clone https://github.com/Stephenson-Software/Parpt.git
 cd Parpt
 ./gradlew build
-java -jar build/libs/parpt.jar
+java -jar build/libs/Parpt-*.jar
 
 ## Getting Started
 Run the CLI:
-java -jar parpt.jar
+java -jar build/libs/Parpt-*.jar
 
 Available commands:
 - `create` - Create a new project with guided scoring
