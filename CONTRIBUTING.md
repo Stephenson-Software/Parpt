@@ -23,7 +23,7 @@ To run the full build (including tests):
 ## Continuous Integration
 This project uses GitHub Actions for continuous integration. All pull requests and pushes to main/develop branches will automatically:
 - Build the project with Java 21
-- Run all unit tests (currently 58 tests)
+- Run all unit tests
 - Generate test reports and artifacts
 - Validate the Gradle wrapper
 

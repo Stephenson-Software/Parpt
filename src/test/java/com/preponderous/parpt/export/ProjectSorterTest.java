@@ -189,6 +189,152 @@ class ProjectSorterTest {
     }
 
     @Test
+    void sortBy_WithNullProjects_ShouldThrowException() {
+        // When & Then
+        assertThrows(IllegalArgumentException.class,
+                () -> projectSorter.sortBy(null, "name"));
+    }
+
+    @Test
+    void sortBy_WithUnsupportedKey_ShouldThrowException() {
+        // Given
+        List<Project> projects = List.of(Project.builder().name("Project 1").build());
+
+        // When & Then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> projectSorter.sortBy(projects, "bogus"));
+        assertTrue(exception.getMessage().contains("bogus"));
+    }
+
+    @Test
+    void sortBy_WithName_ShouldSortAlphabeticallyIgnoringCase() {
+        // Given
+        Project project1 = Project.builder().name("zebra").build();
+        Project project2 = Project.builder().name("Apple").build();
+        Project project3 = Project.builder().name("mango").build();
+        List<Project> projects = Arrays.asList(project1, project2, project3);
+
+        // When
+        List<Project> result = projectSorter.sortBy(projects, "name");
+
+        // Then
+        assertEquals("Apple", result.get(0).getName());
+        assertEquals("mango", result.get(1).getName());
+        assertEquals("zebra", result.get(2).getName());
+        verify(scoreCalculator, never()).ice(any());
+        verify(scoreCalculator, never()).rice(any());
+    }
+
+    @Test
+    void sortBy_WithImpact_ShouldSortHighestFirst() {
+        // Given
+        Project project1 = Project.builder().name("Low impact").impact(1).build();
+        Project project2 = Project.builder().name("High impact").impact(5).build();
+        Project project3 = Project.builder().name("Medium impact").impact(3).build();
+        List<Project> projects = Arrays.asList(project1, project2, project3);
+
+        // When
+        List<Project> result = projectSorter.sortBy(projects, "impact");
+
+        // Then
+        assertEquals("High impact", result.get(0).getName());
+        assertEquals("Medium impact", result.get(1).getName());
+        assertEquals("Low impact", result.get(2).getName());
+    }
+
+    @Test
+    void sortBy_WithEffort_ShouldSortHighestFirst() {
+        // Given
+        Project project1 = Project.builder().name("Low effort").effort(2).build();
+        Project project2 = Project.builder().name("High effort").effort(8).build();
+        List<Project> projects = Arrays.asList(project1, project2);
+
+        // When
+        List<Project> result = projectSorter.sortBy(projects, "effort");
+
+        // Then
+        assertEquals("High effort", result.get(0).getName());
+        assertEquals("Low effort", result.get(1).getName());
+    }
+
+    @Test
+    void sortBy_WithRice_ShouldSortByRiceScore() {
+        // Given
+        Project project1 = Project.builder().name("Low RICE").build();
+        Project project2 = Project.builder().name("High RICE").build();
+        List<Project> projects = Arrays.asList(project1, project2);
+        when(scoreCalculator.rice(project1)).thenReturn(5.0);
+        when(scoreCalculator.rice(project2)).thenReturn(25.0);
+
+        // When
+        List<Project> result = projectSorter.sortBy(projects, "rice");
+
+        // Then
+        assertEquals("High RICE", result.get(0).getName());
+        assertEquals("Low RICE", result.get(1).getName());
+        verify(scoreCalculator, never()).ice(any());
+    }
+
+    @Test
+    void sortBy_WithMixedCaseKey_ShouldSortAsIfLowerCase() {
+        // Given
+        Project project1 = Project.builder().name("Low ICE").build();
+        Project project2 = Project.builder().name("High ICE").build();
+        List<Project> projects = Arrays.asList(project1, project2);
+        when(scoreCalculator.ice(project1)).thenReturn(10.0);
+        when(scoreCalculator.ice(project2)).thenReturn(50.0);
+
+        // When
+        List<Project> result = projectSorter.sortBy(projects, "IcE");
+
+        // Then
+        assertEquals("High ICE", result.get(0).getName());
+        assertEquals("Low ICE", result.get(1).getName());
+    }
+
+    @Test
+    void sortBy_ShouldNotModifyOriginalList() {
+        // Given
+        Project project1 = Project.builder().name("Zebra").build();
+        Project project2 = Project.builder().name("Apple").build();
+        List<Project> originalProjects = Arrays.asList(project1, project2);
+
+        // When
+        List<Project> sortedProjects = projectSorter.sortBy(originalProjects, "name");
+
+        // Then
+        assertEquals("Zebra", originalProjects.get(0).getName());
+        assertEquals("Apple", sortedProjects.get(0).getName());
+        assertNotSame(originalProjects, sortedProjects);
+    }
+
+    @Test
+    void isSupportedSortKey_ShouldAcceptEverySupportedKeyIgnoringCase() {
+        // Given & When & Then
+        for (String key : ProjectSorter.getSupportedSortKeys()) {
+            assertTrue(ProjectSorter.isSupportedSortKey(key));
+            assertTrue(ProjectSorter.isSupportedSortKey(key.toUpperCase()));
+        }
+    }
+
+    @Test
+    void isSupportedSortKey_WithUnknownOrNullKey_ShouldReturnFalse() {
+        // When & Then
+        assertFalse(ProjectSorter.isSupportedSortKey("bogus"));
+        assertFalse(ProjectSorter.isSupportedSortKey(null));
+        assertFalse(ProjectSorter.isSupportedSortKey("none"));
+    }
+
+    @Test
+    void getSupportedSortKeys_ShouldListEveryScoringFieldAndScore() {
+        // When
+        List<String> keys = ProjectSorter.getSupportedSortKeys();
+
+        // Then
+        assertEquals(List.of("name", "impact", "confidence", "ease", "reach", "effort", "ice", "rice"), keys);
+    }
+
+    @Test
     void sortByScore_WithSingleProject_ShouldReturnSingleProjectList() {
         // Given
         Project project = Project.builder().name("Only Project").build();
