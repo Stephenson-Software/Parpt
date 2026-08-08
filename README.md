@@ -36,7 +36,7 @@ java -jar build/libs/Parpt-*.jar
 
 Available commands:
 - `create` - Create a new project with guided scoring
-- `list` - List all projects with scores
+- `list` (alias: `ls`) - List all projects with scores, optionally sorted
 - `view <project-name>` - View detailed project information
 - `export` - Export all projects to Markdown format
 - `help` - Show available commands
@@ -49,6 +49,25 @@ You'll be prompted to enter:
     - Save the results to `projects.json`
     - Allow you to export to `projects.md` sorted by priority
     - Help you sort and review your efforts over time
+
+### List Examples
+```bash
+# List projects in the order they were created (default)
+list
+
+# The 'ls' alias behaves identically
+ls
+
+# List projects sorted by a score, highest first
+list --sort ice
+list --sort rice
+
+# List projects sorted by name (A to Z) or by any scoring field, highest first
+list --sort name
+list -s impact
+```
+
+Supported `--sort` values are `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest; omitting `--sort` keeps the order in which projects were created.
 
 ### Export Examples
 ```bash
