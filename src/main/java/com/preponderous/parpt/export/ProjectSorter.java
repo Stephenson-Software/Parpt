@@ -22,6 +22,13 @@ public class ProjectSorter {
     private static final List<String> SUPPORTED_SORT_KEYS =
             List.of("name", "impact", "confidence", "ease", "reach", "effort", "ice", "rice");
 
+    /**
+     * The sort key applied when the caller does not choose one.
+     */
+    public static final String DEFAULT_SORT_KEY = "ice";
+
+    private static final String NAME_SORT_KEY = "name";
+
     private final ScoreCalculator scoreCalculator;
 
     public ProjectSorter(ScoreCalculator scoreCalculator) {
@@ -49,22 +56,31 @@ public class ProjectSorter {
     }
 
     /**
-     * Sorts a list of projects by their calculated scores.
+     * Describes a sort key as it is presented to the user, e.g. "ICE score" for
+     * {@code ice} and "impact" for {@code impact}.
      *
-     * @param projects the list of projects to sort
-     * @param sortByRice true to sort by RICE score, false to sort by ICE score
-     * @return new list with projects sorted by score (highest to lowest)
+     * @param sortKey one of {@link #getSupportedSortKeys()}, case-insensitive
+     * @return a human-readable description of the sort key
+     * @throws IllegalArgumentException if the sort key is unsupported
      */
-    public List<Project> sortByScore(List<Project> projects, boolean sortByRice) {
-        if (projects == null) {
-            throw new IllegalArgumentException("Projects list cannot be null");
-        }
+    public static String describeSortKey(String sortKey) {
+        String key = requireSupportedSortKey(sortKey);
+        return switch (key) {
+            case "ice", "rice" -> key.toUpperCase(Locale.ROOT) + " score";
+            default -> key;
+        };
+    }
 
-        return projects.stream()
-                .sorted(sortByRice ? 
-                    Comparator.comparingDouble((Project p) -> scoreCalculator.rice(p)).reversed() :
-                    Comparator.comparingDouble((Project p) -> scoreCalculator.ice(p)).reversed())
-                .toList();
+    /**
+     * Describes the direction in which a sort key orders projects, e.g. "A to Z" for
+     * {@code name} and "highest to lowest" for every other key.
+     *
+     * @param sortKey one of {@link #getSupportedSortKeys()}, case-insensitive
+     * @return a human-readable description of the sort direction
+     * @throws IllegalArgumentException if the sort key is unsupported
+     */
+    public static String describeSortDirection(String sortKey) {
+        return NAME_SORT_KEY.equals(requireSupportedSortKey(sortKey)) ? "A to Z" : "highest to lowest";
     }
 
     /**
@@ -74,7 +90,7 @@ public class ProjectSorter {
      * @return new list with projects sorted by ICE score
      */
     public List<Project> sortByIce(List<Project> projects) {
-        return sortByScore(projects, false);
+        return sortBy(projects, "ice");
     }
 
     /**
@@ -84,7 +100,7 @@ public class ProjectSorter {
      * @return new list with projects sorted by RICE score
      */
     public List<Project> sortByRice(List<Project> projects) {
-        return sortByScore(projects, true);
+        return sortBy(projects, "rice");
     }
 
     /**
@@ -107,14 +123,18 @@ public class ProjectSorter {
                 .toList();
     }
 
-    private Comparator<Project> comparatorFor(String sortKey) {
+    private static String requireSupportedSortKey(String sortKey) {
         if (!isSupportedSortKey(sortKey)) {
             throw new IllegalArgumentException("Unsupported sort key: " + sortKey
                     + ". Supported keys: " + String.join(", ", SUPPORTED_SORT_KEYS));
         }
 
-        return switch (sortKey.toLowerCase(Locale.ROOT)) {
-            case "name" -> Comparator.comparing(Project::getName,
+        return sortKey.toLowerCase(Locale.ROOT);
+    }
+
+    private Comparator<Project> comparatorFor(String sortKey) {
+        return switch (requireSupportedSortKey(sortKey)) {
+            case NAME_SORT_KEY -> Comparator.comparing(Project::getName,
                     Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
             case "impact" -> Comparator.comparingInt((Project p) -> p.getImpact()).reversed();
             case "confidence" -> Comparator.comparingInt((Project p) -> p.getConfidence()).reversed();

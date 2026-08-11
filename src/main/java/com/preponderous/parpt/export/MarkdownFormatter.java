@@ -25,19 +25,20 @@ public class MarkdownFormatter {
     /**
      * Generates the markdown header with timestamp and sorting information.
      *
-     * @param sortByRice true if sorted by RICE, false if sorted by ICE
+     * @param sortKey one of {@link ProjectSorter#getSupportedSortKeys()}, case-insensitive
      * @return formatted header string
+     * @throws IllegalArgumentException if the sort key is unsupported
      */
-    public String formatHeader(boolean sortByRice) {
+    public String formatHeader(String sortKey) {
         StringBuilder header = new StringBuilder();
         header.append("# Project Priorities\n\n");
         header.append("*Generated on ")
               .append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
               .append("*\n\n");
-        
-        String scoreType = sortByRice ? "RICE" : "ICE";
-        header.append("*Sorted by ").append(scoreType).append(" score (highest to lowest)*\n\n");
-        
+
+        header.append("*Sorted by ").append(ProjectSorter.describeSortKey(sortKey))
+              .append(" (").append(ProjectSorter.describeSortDirection(sortKey)).append(")*\n\n");
+
         return header.toString();
     }
 

@@ -30,13 +30,13 @@ class MarkdownFormatterTest {
     @Test
     void formatHeader_WithICESort_ShouldIncludeICEInHeader() {
         // When
-        String header = markdownFormatter.formatHeader(false);
+        String header = markdownFormatter.formatHeader("ice");
 
         // Then
         assertAll(
                 () -> assertTrue(header.contains("# Project Priorities")),
                 () -> assertTrue(header.contains("Generated on")),
-                () -> assertTrue(header.contains("Sorted by ICE score")),
+                () -> assertTrue(header.contains("Sorted by ICE score (highest to lowest)")),
                 () -> assertFalse(header.contains("Sorted by RICE score"))
         );
     }
@@ -44,21 +44,58 @@ class MarkdownFormatterTest {
     @Test
     void formatHeader_WithRICESort_ShouldIncludeRICEInHeader() {
         // When
-        String header = markdownFormatter.formatHeader(true);
+        String header = markdownFormatter.formatHeader("rice");
 
         // Then
         assertAll(
                 () -> assertTrue(header.contains("# Project Priorities")),
                 () -> assertTrue(header.contains("Generated on")),
-                () -> assertTrue(header.contains("Sorted by RICE score")),
+                () -> assertTrue(header.contains("Sorted by RICE score (highest to lowest)")),
                 () -> assertFalse(header.contains("Sorted by ICE score"))
         );
     }
 
     @Test
+    void formatHeader_WithNameSort_ShouldDescribeAlphabeticalOrder() {
+        // When
+        String header = markdownFormatter.formatHeader("name");
+
+        // Then
+        assertAll(
+                () -> assertTrue(header.contains("# Project Priorities")),
+                () -> assertTrue(header.contains("Sorted by name (A to Z)")),
+                () -> assertFalse(header.contains("highest to lowest"))
+        );
+    }
+
+    @Test
+    void formatHeader_WithScoringFieldSort_ShouldDescribeDescendingOrder() {
+        // When
+        String header = markdownFormatter.formatHeader("impact");
+
+        // Then
+        assertTrue(header.contains("Sorted by impact (highest to lowest)"));
+    }
+
+    @Test
+    void formatHeader_WithMixedCaseSortKey_ShouldFormatAsIfLowerCase() {
+        // When
+        String header = markdownFormatter.formatHeader("RiCe");
+
+        // Then
+        assertTrue(header.contains("Sorted by RICE score (highest to lowest)"));
+    }
+
+    @Test
+    void formatHeader_WithUnsupportedSortKey_ShouldThrowException() {
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> markdownFormatter.formatHeader("bogus"));
+    }
+
+    @Test
     void formatHeader_ShouldIncludeTimestamp() {
         // When
-        String header = markdownFormatter.formatHeader(false);
+        String header = markdownFormatter.formatHeader("ice");
 
         // Then
         assertTrue(header.contains("Generated on"));

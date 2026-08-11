@@ -52,12 +52,12 @@ class ProjectMarkdownWriterImplTest {
         List<Project> projects = List.of(project);
         List<Project> sortedProjects = List.of(project);
 
-        when(markdownFormatter.formatHeader(false)).thenReturn("# Project Priorities\n\n");
-        when(projectSorter.sortByScore(projects, false)).thenReturn(sortedProjects);
+        when(markdownFormatter.formatHeader("ice")).thenReturn("# Project Priorities\n\n");
+        when(projectSorter.sortBy(projects, "ice")).thenReturn(sortedProjects);
         when(markdownFormatter.formatProject(project, 1)).thenReturn("## 1. Test Project\n");
 
         // When
-        markdownWriter.writeMarkdown(projects, false);
+        markdownWriter.writeMarkdown(projects, "ice");
 
         // Then
         assertTrue(Files.exists(tempMarkdownFile));
@@ -65,8 +65,8 @@ class ProjectMarkdownWriterImplTest {
         assertTrue(content.contains("# Project Priorities"));
         assertTrue(content.contains("## 1. Test Project"));
         
-        verify(markdownFormatter).formatHeader(false);
-        verify(projectSorter).sortByScore(projects, false);
+        verify(markdownFormatter).formatHeader("ice");
+        verify(projectSorter).sortBy(projects, "ice");
         verify(markdownFormatter).formatProject(project, 1);
     }
 
@@ -78,16 +78,16 @@ class ProjectMarkdownWriterImplTest {
         List<Project> projects = Arrays.asList(project1, project2);
         List<Project> sortedProjects = Arrays.asList(project2, project1);
 
-        when(markdownFormatter.formatHeader(true)).thenReturn("# Header\n");
-        when(projectSorter.sortByScore(projects, true)).thenReturn(sortedProjects);
+        when(markdownFormatter.formatHeader("rice")).thenReturn("# Header\n");
+        when(projectSorter.sortBy(projects, "rice")).thenReturn(sortedProjects);
         when(markdownFormatter.formatProject(any(), anyInt())).thenReturn("## Project\n");
 
         // When
-        markdownWriter.writeMarkdown(projects, true);
+        markdownWriter.writeMarkdown(projects, "rice");
 
         // Then
-        verify(projectSorter).sortByScore(projects, true);
-        verify(markdownFormatter).formatHeader(true);
+        verify(projectSorter).sortBy(projects, "rice");
+        verify(markdownFormatter).formatHeader("rice");
         verify(markdownFormatter).formatProject(project2, 1);
         verify(markdownFormatter).formatProject(project1, 2);
     }
@@ -99,16 +99,16 @@ class ProjectMarkdownWriterImplTest {
         List<Project> projects = List.of(project);
         List<Project> sortedProjects = List.of(project);
 
-        when(markdownFormatter.formatHeader(true)).thenReturn("# Header RICE\n");
-        when(projectSorter.sortByScore(projects, true)).thenReturn(sortedProjects);
+        when(markdownFormatter.formatHeader("rice")).thenReturn("# Header RICE\n");
+        when(projectSorter.sortBy(projects, "rice")).thenReturn(sortedProjects);
         when(markdownFormatter.formatProject(project, 1)).thenReturn("## Project\n");
 
         // When
-        markdownWriter.writeMarkdown(projects, true);
+        markdownWriter.writeMarkdown(projects, "rice");
 
         // Then
-        verify(markdownFormatter).formatHeader(true);
-        verify(projectSorter).sortByScore(projects, true);
+        verify(markdownFormatter).formatHeader("rice");
+        verify(projectSorter).sortBy(projects, "rice");
         
         String content = Files.readString(tempMarkdownFile);
         assertTrue(content.contains("# Header RICE"));
@@ -118,28 +118,43 @@ class ProjectMarkdownWriterImplTest {
     void writeMarkdown_WithEmptyList_ShouldWriteNoProjectsMessage() throws IOException {
         // Given
         List<Project> projects = List.of();
-        when(markdownFormatter.formatHeader(false)).thenReturn("# Header\n");
+        when(markdownFormatter.formatHeader("ice")).thenReturn("# Header\n");
+        when(projectSorter.sortBy(projects, "ice")).thenReturn(List.of());
         when(markdownFormatter.formatNoProjectsMessage()).thenReturn("No projects found.\n");
 
         // When
-        markdownWriter.writeMarkdown(projects, false);
+        markdownWriter.writeMarkdown(projects, "ice");
 
         // Then
         String content = Files.readString(tempMarkdownFile);
         assertTrue(content.contains("# Header"));
         assertTrue(content.contains("No projects found"));
-        
-        verify(markdownFormatter).formatHeader(false);
+
+        verify(markdownFormatter).formatHeader("ice");
         verify(markdownFormatter).formatNoProjectsMessage();
-        verify(projectSorter, never()).sortByScore(any(), anyBoolean());
         verify(markdownFormatter, never()).formatProject(any(), anyInt());
+    }
+
+    @Test
+    void writeMarkdown_WithUnsupportedSortKey_ShouldThrowBeforeWritingTheFile() {
+        // Given
+        List<Project> projects = List.of(Project.builder().name("Test Project").build());
+        when(projectSorter.sortBy(projects, "bogus"))
+                .thenThrow(new IllegalArgumentException("Unsupported sort key: bogus"));
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class,
+                () -> markdownWriter.writeMarkdown(projects, "bogus"));
+
+        assertFalse(Files.exists(tempMarkdownFile));
+        verifyNoInteractions(markdownFormatter);
     }
 
     @Test
     void writeMarkdown_WithNullList_ShouldThrowException() {
         // When & Then
         assertThrows(IllegalArgumentException.class, 
-                () -> markdownWriter.writeMarkdown(null, false));
+                () -> markdownWriter.writeMarkdown(null, "ice"));
         
         verifyNoInteractions(markdownFormatter);
         verifyNoInteractions(projectSorter);
@@ -155,12 +170,12 @@ class ProjectMarkdownWriterImplTest {
         List<Project> projects = Arrays.asList(project1, project2, project3);
         List<Project> sortedProjects = Arrays.asList(project3, project1, project2);
 
-        when(markdownFormatter.formatHeader(false)).thenReturn("# Header\n");
-        when(projectSorter.sortByScore(projects, false)).thenReturn(sortedProjects);
+        when(markdownFormatter.formatHeader("ice")).thenReturn("# Header\n");
+        when(projectSorter.sortBy(projects, "ice")).thenReturn(sortedProjects);
         when(markdownFormatter.formatProject(any(), anyInt())).thenReturn("## Project\n");
 
         // When
-        markdownWriter.writeMarkdown(projects, false);
+        markdownWriter.writeMarkdown(projects, "ice");
 
         // Then
         verify(markdownFormatter).formatProject(project3, 1);
