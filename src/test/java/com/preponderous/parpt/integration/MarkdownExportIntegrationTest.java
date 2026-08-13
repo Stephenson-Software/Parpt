@@ -59,7 +59,7 @@ class MarkdownExportIntegrationTest {
 
         // Export to markdown sorted by ICE
         List<Project> projects = projectService.getProjects();
-        markdownWriter.writeMarkdown(projects, false);
+        markdownWriter.writeMarkdown(projects, "ice");
 
         // Verify the markdown file was created and has correct content
         assertTrue(Files.exists(Paths.get("integration-test-projects.md")));
@@ -87,10 +87,19 @@ class MarkdownExportIntegrationTest {
         assertTrue(content.contains("Impact:** 5/5 (very high)"));
         
         // Test RICE sorting
-        markdownWriter.writeMarkdown(projects, true);
+        markdownWriter.writeMarkdown(projects, "rice");
         String riceContent = Files.readString(Paths.get("integration-test-projects.md"));
         assertTrue(riceContent.contains("Sorted by RICE score"));
-        
+
+        // Test sorting by a non-score field
+        markdownWriter.writeMarkdown(projects, "name");
+        String nameContent = Files.readString(Paths.get("integration-test-projects.md"));
+        assertTrue(nameContent.contains("Sorted by name (A to Z)"));
+        assertTrue(nameContent.indexOf("High Impact App") < nameContent.indexOf("Quick Win Feature"),
+                "High Impact App should come before Quick Win Feature when sorted by name");
+        assertTrue(nameContent.indexOf("Quick Win Feature") < nameContent.indexOf("Technical Debt Fix"),
+                "Quick Win Feature should come before Technical Debt Fix when sorted by name");
+
         // Clean up
         Files.deleteIfExists(Paths.get("integration-test-projects.json"));
         Files.deleteIfExists(Paths.get("integration-test-projects.md"));

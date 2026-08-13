@@ -27,22 +27,23 @@ public class ProjectMarkdownWriterImpl implements ProjectMarkdownWriter {
     }
 
     @Override
-    public void writeMarkdown(List<Project> projects, boolean sortByRice) {
+    public void writeMarkdown(List<Project> projects, String sortKey) {
         if (projects == null) {
             throw new IllegalArgumentException("Projects list cannot be null");
         }
 
+        // Sort up front so an unsupported sort key is rejected before the file is touched
+        List<Project> sortedProjects = projectSorter.sortBy(projects, sortKey);
+
         try (FileWriter writer = new FileWriter(markdownFilePath)) {
             // Write header
-            writer.write(markdownFormatter.formatHeader(sortByRice));
-            
-            if (projects.isEmpty()) {
+            writer.write(markdownFormatter.formatHeader(sortKey));
+
+            if (sortedProjects.isEmpty()) {
                 writer.write(markdownFormatter.formatNoProjectsMessage());
                 return;
             }
 
-            // Sort projects and write them
-            List<Project> sortedProjects = projectSorter.sortByScore(projects, sortByRice);
             for (int i = 0; i < sortedProjects.size(); i++) {
                 Project project = sortedProjects.get(i);
                 writer.write(markdownFormatter.formatProject(project, i + 1));

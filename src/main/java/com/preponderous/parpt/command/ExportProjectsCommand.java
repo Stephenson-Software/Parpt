@@ -1,6 +1,7 @@
 package com.preponderous.parpt.command;
 
 import com.preponderous.parpt.domain.Project;
+import com.preponderous.parpt.export.ProjectSorter;
 import com.preponderous.parpt.repo.ProjectMarkdownWriter;
 import com.preponderous.parpt.service.ProjectService;
 import org.springframework.shell.standard.ShellComponent;
@@ -20,9 +21,9 @@ public class ExportProjectsCommand {
         this.markdownWriter = markdownWriter;
     }
 
-    @ShellMethod(key = "export", value = "Exports all projects to Markdown format, sorted by score.")
+    @ShellMethod(key = "export", value = "Exports all projects to Markdown format, sorted by a chosen field.")
     public String execute(
-            @ShellOption(value = {"-s", "--sort"}, help = "Sort by 'ice' or 'rice' score (default: ice)", defaultValue = "ice") String sortBy
+            @ShellOption(value = {"-s", "--sort"}, help = "Sort by 'name', 'impact', 'confidence', 'ease', 'reach', 'effort', 'ice' or 'rice' (default: ice)", defaultValue = ProjectSorter.DEFAULT_SORT_KEY) String sortBy
     ) {
         List<Project> projects = projectService.getProjects();
 
@@ -30,17 +31,15 @@ public class ExportProjectsCommand {
             return "No projects found to export.";
         }
 
-        boolean sortByRice = "rice".equalsIgnoreCase(sortBy);
-        
-        if (!sortByRice && !"ice".equalsIgnoreCase(sortBy)) {
-            return "Invalid sort option. Use 'ice' or 'rice'.";
+        if (!ProjectSorter.isSupportedSortKey(sortBy)) {
+            return String.format("Invalid sort option. Use one of: %s.",
+                    String.join(", ", ProjectSorter.getSupportedSortKeys()));
         }
 
         try {
-            markdownWriter.writeMarkdown(projects, sortByRice);
-            String scoreType = sortByRice ? "RICE" : "ICE";
-            return String.format("Successfully exported %d projects to projects.md, sorted by %s score.", 
-                    projects.size(), scoreType);
+            markdownWriter.writeMarkdown(projects, sortBy);
+            return String.format("Successfully exported %d projects to projects.md, sorted by %s.",
+                    projects.size(), ProjectSorter.describeSortKey(sortBy));
         } catch (Exception e) {
             return "Failed to export projects: " + e.getMessage();
         }

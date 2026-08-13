@@ -10,7 +10,7 @@ Parpt is an interactive CLI tool that helps developers, indie creators and teams
 - Calculate ICE (Impact, Confidence, Ease) scores
 - Calculate RICE (Reach, Impact, Confidence, Effort) scores
 - Export projects to Markdown and JSON formats
-- Obsidian-compatible markdown export with sorting by ICE/RICE scores
+- Obsidian-compatible markdown export with sorting by name, any scoring field or ICE/RICE scores
 - Rank and sort projects by monetization, potential, feasibility and effort
 - Spring Boot architecture with interactive shell
 - 100% local-first and open source
@@ -38,7 +38,7 @@ Available commands:
 - `create` - Create a new project with guided scoring
 - `list` (alias: `ls`) - List all projects with scores, optionally sorted
 - `view <project-name>` - View detailed project information
-- `export` - Export all projects to Markdown format
+- `export` - Export all projects to Markdown format, optionally sorted
 - `help` - Show available commands
 
 You'll be prompted to enter:
@@ -76,7 +76,13 @@ export
 
 # Export projects sorted by RICE score
 export --sort rice
+
+# Export projects sorted by name (A to Z) or by any scoring field, highest first
+export --sort name
+export -s impact
 ```
+
+`export` accepts the same `--sort` values as `list`: `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest, and the chosen order is recorded in the exported file's header. Unlike `list`, `export` always sorts — omitting `--sort` sorts by ICE score.
 
 ## Roadmap
 - [x] Project input and validation loop

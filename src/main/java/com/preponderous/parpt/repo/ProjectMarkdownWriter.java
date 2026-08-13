@@ -1,6 +1,7 @@
 package com.preponderous.parpt.repo;
 
 import com.preponderous.parpt.domain.Project;
+import com.preponderous.parpt.export.ProjectSorter;
 
 import java.util.List;
 
@@ -12,12 +13,12 @@ import java.util.List;
 public interface ProjectMarkdownWriter {
     /**
      * Writes a list of projects to Markdown format.
-     * Projects should be sorted by their calculated scores.
+     * Projects are sorted by the given sort key before being written.
      *
      * @param projects the list of projects to be written to Markdown
-     * @param sortByRice true to sort by RICE score, false to sort by ICE score
+     * @param sortKey one of {@link ProjectSorter#getSupportedSortKeys()}, case-insensitive
      */
-    void writeMarkdown(List<Project> projects, boolean sortByRice);
+    void writeMarkdown(List<Project> projects, String sortKey);
 
     /**
      * Writes a list of projects to Markdown format.
@@ -26,6 +27,6 @@ public interface ProjectMarkdownWriter {
      * @param projects the list of projects to be written to Markdown
      */
     default void writeMarkdown(List<Project> projects) {
-        writeMarkdown(projects, false);
+        writeMarkdown(projects, ProjectSorter.DEFAULT_SORT_KEY);
     }
 }

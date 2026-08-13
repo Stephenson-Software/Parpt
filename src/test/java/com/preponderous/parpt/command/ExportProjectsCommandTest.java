@@ -47,9 +47,9 @@ class ExportProjectsCommandTest {
         String result = exportCommand.execute("ice");
 
         // Then
-        verify(markdownWriter).writeMarkdown(projects, false);
+        verify(markdownWriter).writeMarkdown(projects, "ice");
         assertTrue(result.contains("Successfully exported 2 projects"));
-        assertTrue(result.contains("ICE score"));
+        assertTrue(result.contains("sorted by ICE score."));
     }
 
     @Test
@@ -64,9 +64,26 @@ class ExportProjectsCommandTest {
         String result = exportCommand.execute("rice");
 
         // Then
-        verify(markdownWriter).writeMarkdown(projects, true);
+        verify(markdownWriter).writeMarkdown(projects, "rice");
         assertTrue(result.contains("Successfully exported 1 projects"));
-        assertTrue(result.contains("RICE score"));
+        assertTrue(result.contains("sorted by RICE score."));
+    }
+
+    @Test
+    void execute_WithNonScoreSortKey_ShouldExportWithThatKey() {
+        // Given
+        List<Project> projects = List.of(
+                Project.builder().name("Project 1").description("Desc 1").build()
+        );
+        when(projectService.getProjects()).thenReturn(projects);
+
+        // When
+        String result = exportCommand.execute("name");
+
+        // Then
+        verify(markdownWriter).writeMarkdown(projects, "name");
+        assertTrue(result.contains("Successfully exported 1 projects"));
+        assertTrue(result.contains("sorted by name."));
     }
 
     @Test
@@ -78,7 +95,7 @@ class ExportProjectsCommandTest {
         String result = exportCommand.execute("ice");
 
         // Then
-        verify(markdownWriter, never()).writeMarkdown(any(), anyBoolean());
+        verify(markdownWriter, never()).writeMarkdown(any(), anyString());
         assertEquals("No projects found to export.", result);
     }
 
@@ -94,8 +111,8 @@ class ExportProjectsCommandTest {
         String result = exportCommand.execute("invalid");
 
         // Then
-        verify(markdownWriter, never()).writeMarkdown(any(), anyBoolean());
-        assertEquals("Invalid sort option. Use 'ice' or 'rice'.", result);
+        verify(markdownWriter, never()).writeMarkdown(any(), anyString());
+        assertEquals("Invalid sort option. Use one of: name, impact, confidence, ease, reach, effort, ice, rice.", result);
     }
 
     @Test
@@ -105,7 +122,7 @@ class ExportProjectsCommandTest {
                 Project.builder().name("Project 1").description("Desc 1").build()
         );
         when(projectService.getProjects()).thenReturn(projects);
-        doThrow(new RuntimeException("Write failed")).when(markdownWriter).writeMarkdown(any(), anyBoolean());
+        doThrow(new RuntimeException("Write failed")).when(markdownWriter).writeMarkdown(any(), anyString());
 
         // When
         String result = exportCommand.execute("ice");
@@ -123,13 +140,17 @@ class ExportProjectsCommandTest {
         when(projectService.getProjects()).thenReturn(projects);
 
         // When & Then
-        exportCommand.execute("ICE");
-        verify(markdownWriter).writeMarkdown(projects, false);
+        // The key is passed through as given; ProjectSorter and MarkdownFormatter normalize it
+        String upperCaseIceResult = exportCommand.execute("ICE");
+        verify(markdownWriter).writeMarkdown(projects, "ICE");
+        assertTrue(upperCaseIceResult.contains("sorted by ICE score."));
 
-        exportCommand.execute("Rice");
-        verify(markdownWriter).writeMarkdown(projects, true);
+        String mixedCaseRiceResult = exportCommand.execute("Rice");
+        verify(markdownWriter).writeMarkdown(projects, "Rice");
+        assertTrue(mixedCaseRiceResult.contains("sorted by RICE score."));
 
-        exportCommand.execute("RICE");
-        verify(markdownWriter, times(2)).writeMarkdown(projects, true);
+        String mixedCaseNameResult = exportCommand.execute("NaMe");
+        verify(markdownWriter).writeMarkdown(projects, "NaMe");
+        assertTrue(mixedCaseNameResult.contains("sorted by name."));
     }
 }
