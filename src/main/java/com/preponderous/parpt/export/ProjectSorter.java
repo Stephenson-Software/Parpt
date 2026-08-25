@@ -15,19 +15,40 @@ import java.util.Locale;
 @Component
 public class ProjectSorter {
 
+    private static final String NAME_SORT_KEY = "name";
+    private static final String IMPACT_SORT_KEY = "impact";
+    private static final String CONFIDENCE_SORT_KEY = "confidence";
+    private static final String EASE_SORT_KEY = "ease";
+    private static final String REACH_SORT_KEY = "reach";
+    private static final String EFFORT_SORT_KEY = "effort";
+    private static final String ICE_SORT_KEY = "ice";
+    private static final String RICE_SORT_KEY = "rice";
+
     /**
      * The sort keys accepted by {@link #sortBy(List, String)}, in the order they are
      * presented to the user.
      */
-    private static final List<String> SUPPORTED_SORT_KEYS =
-            List.of("name", "impact", "confidence", "ease", "reach", "effort", "ice", "rice");
+    private static final List<String> SUPPORTED_SORT_KEYS = List.of(
+            NAME_SORT_KEY, IMPACT_SORT_KEY, CONFIDENCE_SORT_KEY, EASE_SORT_KEY,
+            REACH_SORT_KEY, EFFORT_SORT_KEY, ICE_SORT_KEY, RICE_SORT_KEY);
+
+    /**
+     * The supported sort keys rendered for shell option help text, as
+     * {@code 'name', 'impact', ... or 'rice'}. Annotation attributes must be
+     * compile-time constants, so shell commands cannot call
+     * {@link #getSupportedSortKeys()} in a {@code help} attribute; they concatenate
+     * this constant instead. {@code ProjectSorterTest} asserts that the keys quoted
+     * here and {@link #getSupportedSortKeys()} stay in agreement.
+     */
+    public static final String SUPPORTED_SORT_KEYS_HELP =
+            "'" + NAME_SORT_KEY + "', '" + IMPACT_SORT_KEY + "', '" + CONFIDENCE_SORT_KEY
+                    + "', '" + EASE_SORT_KEY + "', '" + REACH_SORT_KEY + "', '" + EFFORT_SORT_KEY
+                    + "', '" + ICE_SORT_KEY + "' or '" + RICE_SORT_KEY + "'";
 
     /**
      * The sort key applied when the caller does not choose one.
      */
-    public static final String DEFAULT_SORT_KEY = "ice";
-
-    private static final String NAME_SORT_KEY = "name";
+    public static final String DEFAULT_SORT_KEY = ICE_SORT_KEY;
 
     private final ScoreCalculator scoreCalculator;
 
@@ -66,7 +87,7 @@ public class ProjectSorter {
     public static String describeSortKey(String sortKey) {
         String key = requireSupportedSortKey(sortKey);
         return switch (key) {
-            case "ice", "rice" -> key.toUpperCase(Locale.ROOT) + " score";
+            case ICE_SORT_KEY, RICE_SORT_KEY -> key.toUpperCase(Locale.ROOT) + " score";
             default -> key;
         };
     }
@@ -90,7 +111,7 @@ public class ProjectSorter {
      * @return new list with projects sorted by ICE score
      */
     public List<Project> sortByIce(List<Project> projects) {
-        return sortBy(projects, "ice");
+        return sortBy(projects, ICE_SORT_KEY);
     }
 
     /**
@@ -100,7 +121,7 @@ public class ProjectSorter {
      * @return new list with projects sorted by RICE score
      */
     public List<Project> sortByRice(List<Project> projects) {
-        return sortBy(projects, "rice");
+        return sortBy(projects, RICE_SORT_KEY);
     }
 
     /**
@@ -136,13 +157,13 @@ public class ProjectSorter {
         return switch (requireSupportedSortKey(sortKey)) {
             case NAME_SORT_KEY -> Comparator.comparing(Project::getName,
                     Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
-            case "impact" -> Comparator.comparingInt((Project p) -> p.getImpact()).reversed();
-            case "confidence" -> Comparator.comparingInt((Project p) -> p.getConfidence()).reversed();
-            case "ease" -> Comparator.comparingInt((Project p) -> p.getEase()).reversed();
-            case "reach" -> Comparator.comparingInt((Project p) -> p.getReach()).reversed();
-            case "effort" -> Comparator.comparingInt((Project p) -> p.getEffort()).reversed();
-            case "ice" -> Comparator.comparingDouble((Project p) -> scoreCalculator.ice(p)).reversed();
-            case "rice" -> Comparator.comparingDouble((Project p) -> scoreCalculator.rice(p)).reversed();
+            case IMPACT_SORT_KEY -> Comparator.comparingInt((Project p) -> p.getImpact()).reversed();
+            case CONFIDENCE_SORT_KEY -> Comparator.comparingInt((Project p) -> p.getConfidence()).reversed();
+            case EASE_SORT_KEY -> Comparator.comparingInt((Project p) -> p.getEase()).reversed();
+            case REACH_SORT_KEY -> Comparator.comparingInt((Project p) -> p.getReach()).reversed();
+            case EFFORT_SORT_KEY -> Comparator.comparingInt((Project p) -> p.getEffort()).reversed();
+            case ICE_SORT_KEY -> Comparator.comparingDouble((Project p) -> scoreCalculator.ice(p)).reversed();
+            case RICE_SORT_KEY -> Comparator.comparingDouble((Project p) -> scoreCalculator.rice(p)).reversed();
             default -> throw new IllegalArgumentException("Unsupported sort key: " + sortKey);
         };
     }

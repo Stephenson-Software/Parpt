@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.shell.standard.ShellMethod;
+import org.springframework.shell.standard.ShellOption;
 
 import java.util.Arrays;
 
@@ -149,5 +150,19 @@ class ListProjectsCommandTest {
         assertEquals(2, shellMethod.key().length);
         assertTrue(Arrays.asList(shellMethod.key()).contains("list"));
         assertTrue(Arrays.asList(shellMethod.key()).contains("ls"));
+    }
+
+    @Test
+    void shouldDocumentTheSupportedSortKeysAndTheDefaultInTheSortOptionHelpText() throws NoSuchMethodException {
+        // Given the help text of the --sort option
+        String help = ListProjectsCommand.class
+                .getMethod("execute", String.class)
+                .getParameters()[0]
+                .getAnnotation(ShellOption.class)
+                .help();
+
+        // Then it names every supported sort key and reports the list command's default
+        assertTrue(help.contains(ProjectSorter.SUPPORTED_SORT_KEYS_HELP));
+        assertTrue(help.contains("default: creation order"));
     }
 }

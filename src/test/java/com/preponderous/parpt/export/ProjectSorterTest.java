@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -337,5 +338,18 @@ class ProjectSorterTest {
         // When & Then
         assertEquals("ice", ProjectSorter.DEFAULT_SORT_KEY);
         assertTrue(ProjectSorter.isSupportedSortKey(ProjectSorter.DEFAULT_SORT_KEY));
+    }
+
+    @Test
+    void supportedSortKeysHelp_ShouldQuoteEverySupportedSortKeyInOrder() {
+        // Given the keys quoted in the help text shown for the --sort option
+        List<String> quotedKeys = Pattern.compile("'([^']*)'")
+                .matcher(ProjectSorter.SUPPORTED_SORT_KEYS_HELP)
+                .results()
+                .map(match -> match.group(1))
+                .toList();
+
+        // Then they are exactly the supported sort keys, in the same order
+        assertEquals(ProjectSorter.getSupportedSortKeys(), quotedKeys);
     }
 }
