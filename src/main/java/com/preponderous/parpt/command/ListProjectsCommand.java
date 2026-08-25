@@ -31,7 +31,7 @@ public class ListProjectsCommand {
 
     @ShellMethod(key = {"list", "ls"}, value = "Lists all projects, optionally sorted by a chosen field.")
     public String execute(
-            @ShellOption(value = {"-s", "--sort"}, help = "Sort by 'name', 'impact', 'confidence', 'ease', 'reach', 'effort', 'ice' or 'rice' (default: creation order)", defaultValue = SORT_NONE) String sortBy
+            @ShellOption(value = {"-s", "--sort"}, help = "Sort by " + ProjectSorter.SUPPORTED_SORT_KEYS_HELP + " (default: creation order)", defaultValue = SORT_NONE) String sortBy
     ) {
         List<Project> projects = projectService.getProjects();
 

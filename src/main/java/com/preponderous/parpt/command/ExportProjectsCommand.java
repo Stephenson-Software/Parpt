@@ -23,7 +23,7 @@ public class ExportProjectsCommand {
 
     @ShellMethod(key = "export", value = "Exports all projects to Markdown format, sorted by a chosen field.")
     public String execute(
-            @ShellOption(value = {"-s", "--sort"}, help = "Sort by 'name', 'impact', 'confidence', 'ease', 'reach', 'effort', 'ice' or 'rice' (default: ice)", defaultValue = ProjectSorter.DEFAULT_SORT_KEY) String sortBy
+            @ShellOption(value = {"-s", "--sort"}, help = "Sort by " + ProjectSorter.SUPPORTED_SORT_KEYS_HELP + " (default: " + ProjectSorter.DEFAULT_SORT_KEY + ")", defaultValue = ProjectSorter.DEFAULT_SORT_KEY) String sortBy
     ) {
         List<Project> projects = projectService.getProjects();
 

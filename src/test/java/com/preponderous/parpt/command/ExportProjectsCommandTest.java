@@ -1,6 +1,7 @@
 package com.preponderous.parpt.command;
 
 import com.preponderous.parpt.domain.Project;
+import com.preponderous.parpt.export.ProjectSorter;
 import com.preponderous.parpt.repo.ProjectMarkdownWriter;
 import com.preponderous.parpt.service.ProjectService;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.shell.standard.ShellOption;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -152,5 +154,19 @@ class ExportProjectsCommandTest {
         String mixedCaseNameResult = exportCommand.execute("NaMe");
         verify(markdownWriter).writeMarkdown(projects, "NaMe");
         assertTrue(mixedCaseNameResult.contains("sorted by name."));
+    }
+
+    @Test
+    void execute_ShouldDocumentTheSupportedSortKeysAndTheDefaultInTheSortOptionHelpText() throws NoSuchMethodException {
+        // Given the help text of the --sort option
+        String help = ExportProjectsCommand.class
+                .getMethod("execute", String.class)
+                .getParameters()[0]
+                .getAnnotation(ShellOption.class)
+                .help();
+
+        // Then it names every supported sort key and reports the export command's default
+        assertTrue(help.contains(ProjectSorter.SUPPORTED_SORT_KEYS_HELP));
+        assertTrue(help.contains("default: " + ProjectSorter.DEFAULT_SORT_KEY));
     }
 }
