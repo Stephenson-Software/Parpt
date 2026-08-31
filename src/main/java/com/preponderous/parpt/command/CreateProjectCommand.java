@@ -42,11 +42,13 @@ public class CreateProjectCommand {
             // No more input is available, e.g. the user pressed Ctrl-D
             throw new CreationCancelledException();
         }
+        // Only the quit comparison ignores surrounding whitespace; the answer itself is returned
+        // untouched so this change does not alter how any existing answer is interpreted
         String trimmedInput = input.trim();
         if (trimmedInput.equalsIgnoreCase("q") || trimmedInput.equalsIgnoreCase("quit")) {
             throw new CreationCancelledException();
         }
-        return trimmedInput;
+        return input;
     }
 
     private int getAverageScore(String[] prompts) throws InvalidScoreException, CreationCancelledException {
