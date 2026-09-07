@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -127,6 +128,55 @@ class CreateProjectCommandTest {
         assertTrue(promptProperties.getEase()[0].startsWith("[TEST]"));
         assertTrue(promptProperties.getReach()[0].startsWith("[TEST]"));
         assertTrue(promptProperties.getEffort()[0].startsWith("[TEST]"));
+    }
+
+    @Test
+    void testQuittingAtNamePromptCancelsCreation() {
+        when(inputProvider.readLine(promptProperties.getProjectName())).thenReturn("q");
+
+        String result = command.execute(null, null, null, null, null, null, null);
+
+        assertEquals("Project creation cancelled.", result);
+        verify(inputProvider).readLine(promptProperties.getProjectName());
+        verify(inputProvider, never()).readLine(promptProperties.getProjectDescription());
+    }
+
+    @Test
+    void testQuittingAtScorePromptCancelsCreation() {
+        when(inputProvider.readLine(promptProperties.getImpact()[0])).thenReturn("quit");
+
+        String result = command.execute(
+                "Cancelled Project",
+                "Cancelled Description",
+                null,
+                5,
+                5,
+                5,
+                5
+        );
+
+        assertEquals("Project creation cancelled.", result);
+        verify(inputProvider).readLine(promptProperties.getImpact()[0]);
+        verify(inputProvider, never()).readLine(promptProperties.getImpact()[1]);
+        assertFalse(projectService.isNameTaken("Cancelled Project"));
+    }
+
+    @Test
+    void testEndOfInputCancelsCreation() {
+        when(inputProvider.readLine(promptProperties.getProjectDescription())).thenReturn(null);
+
+        String result = command.execute(
+                "EOF Project",
+                null,
+                5,
+                5,
+                5,
+                5,
+                5
+        );
+
+        assertEquals("Project creation cancelled.", result);
+        assertFalse(projectService.isNameTaken("EOF Project"));
     }
 
     @Test

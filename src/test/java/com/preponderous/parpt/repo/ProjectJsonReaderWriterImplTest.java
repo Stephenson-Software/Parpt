@@ -1,6 +1,7 @@
 
 package com.preponderous.parpt.repo;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.preponderous.parpt.domain.Project;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,9 @@ class ProjectJsonReaderWriterImplTest {
 
     @Autowired
     private ProjectJsonReaderWriterImpl readerWriter;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @TempDir
     Path tempDir;
@@ -118,6 +122,26 @@ class ProjectJsonReaderWriterImplTest {
         assertThat(readProjects)
                 .isNotNull()
                 .isEmpty();
+    }
+
+    @Test
+    void writeJson_WhenParentDirectoryIsMissing_ShouldCreateIt() {
+        // Arrange
+        Path missingDirectory = tempDir.resolve("parpt-data").resolve("nested");
+        Path projectsFile = missingDirectory.resolve("projects.json");
+        ProjectJsonReaderWriterImpl nestedReaderWriter =
+                new ProjectJsonReaderWriterImpl(projectsFile.toString(), objectMapper);
+
+        // Act
+        nestedReaderWriter.writeJson(List.of(project1));
+
+        // Assert
+        assertThat(missingDirectory).isDirectory();
+        assertThat(projectsFile).isRegularFile();
+        assertThat(nestedReaderWriter.readJson())
+                .hasSize(1)
+                .usingRecursiveComparison()
+                .isEqualTo(List.of(project1));
     }
 
     @Test

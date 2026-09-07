@@ -12,6 +12,9 @@ import org.springframework.shell.standard.ShellOption;
 
 @ShellComponent
 public class CreateProjectCommand {
+    private static final String QUIT_HINT = "Enter 'q' at any prompt to cancel project creation.";
+    private static final String CANCELLED_MESSAGE = "Project creation cancelled.";
+
     private final ProjectService projectService;
     private final ConsoleInputProvider inputProvider;
     private final ScoreCalculator scoreCalculator;
@@ -29,11 +32,30 @@ public class CreateProjectCommand {
     }
 
 
-    private int getAverageScore(String[] prompts) throws InvalidScoreException {
+    /**
+     * Prompts the user and returns their answer, treating a quit token or the end of input as a
+     * request to abandon project creation.
+     */
+    private String readInput(String prompt) throws CreationCancelledException {
+        String input = inputProvider.readLine(prompt);
+        if (input == null) {
+            // No more input is available, e.g. the user pressed Ctrl-D
+            throw new CreationCancelledException();
+        }
+        // Only the quit comparison ignores surrounding whitespace; the answer itself is returned
+        // untouched so this change does not alter how any existing answer is interpreted
+        String trimmedInput = input.trim();
+        if (trimmedInput.equalsIgnoreCase("q") || trimmedInput.equalsIgnoreCase("quit")) {
+            throw new CreationCancelledException();
+        }
+        return input;
+    }
+
+    private int getAverageScore(String[] prompts) throws InvalidScoreException, CreationCancelledException {
         int total = 0;
         for (String prompt : prompts) {
             try {
-                int score = Integer.parseInt(inputProvider.readLine(prompt));
+                int score = Integer.parseInt(readInput(prompt));
                 if (score < 1 || score > 5) {
                     throw new InvalidScoreException("Invalid score. Must be between 1 and 5.");
                 }
@@ -43,6 +65,19 @@ public class CreateProjectCommand {
             }
         }
         return Math.round((float) total / prompts.length);
+    }
+
+    /**
+     * Re-prompts for a category's scores until every answer is valid, or the user quits.
+     */
+    private int promptForScore(String[] prompts) throws CreationCancelledException {
+        while (true) {
+            try {
+                return getAverageScore(prompts);
+            } catch (InvalidScoreException e) {
+                System.out.println(e.getMessage());
+            }
+        }
     }
 
 
@@ -56,76 +91,46 @@ public class CreateProjectCommand {
             @ShellOption(value = {"-r", "--reach"}, help = "Reach score (1-5)", defaultValue = ShellOption.NULL) Integer reach,
             @ShellOption(value = {"-f", "--effort"}, help = "Effort score (1-5)", defaultValue = ShellOption.NULL) Integer effort
     ) {
+        boolean interactive = projectName == null || projectDescription == null || impact == null
+                || confidence == null || ease == null || reach == null || effort == null;
+        if (interactive) {
+            System.out.println(QUIT_HINT);
+        }
+
         // Interactive input if parameters are not provided
-        if (projectName == null) {
-            projectName = inputProvider.readLine(promptProperties.getProjectName());
-        }
-        if (projectName == null || projectName.isEmpty()) {
-            return "Project name cannot be empty.";
-        }
-        if (projectService.isNameTaken(projectName)) {
-            return "Project name '" + projectName + "' is already taken. Please choose a different name.";
-        }
-        if (projectDescription == null) {
-            projectDescription = inputProvider.readLine(promptProperties.getProjectDescription());
-        }
-        if (projectDescription == null || projectDescription.isEmpty()) {
-            return "Project description cannot be empty.";
-        }
-        if (impact == null) {
-            boolean continueLoop = true;
-            while (continueLoop) {
-                try {
-                    impact = getAverageScore(promptProperties.getImpact());
-                    continueLoop = false;
-                } catch (InvalidScoreException e) {
-                    System.out.println(e.getMessage());
-                }
+        try {
+            if (projectName == null) {
+                projectName = readInput(promptProperties.getProjectName());
             }
-        }
-        if (confidence == null) {
-            boolean continueLoop = true;
-            while (continueLoop) {
-                try {
-                    confidence = getAverageScore(promptProperties.getConfidence());
-                    continueLoop = false;
-                } catch (InvalidScoreException e) {
-                    System.out.println(e.getMessage());
-                }
+            if (projectName.isEmpty()) {
+                return "Project name cannot be empty.";
             }
-        }
-        if (ease == null) {
-            boolean continueLoop = true;
-            while (continueLoop) {
-                try {
-                    ease = getAverageScore(promptProperties.getEase());
-                    continueLoop = false;
-                } catch (InvalidScoreException e) {
-                    System.out.println(e.getMessage());
-                }
+            if (projectService.isNameTaken(projectName)) {
+                return "Project name '" + projectName + "' is already taken. Please choose a different name.";
             }
-        }
-        if (reach == null) {
-            boolean continueLoop = true;
-            while (continueLoop) {
-                try {
-                    reach = getAverageScore(promptProperties.getReach());
-                    continueLoop = false;
-                } catch (InvalidScoreException e) {
-                    System.out.println(e.getMessage());
-                }
+            if (projectDescription == null) {
+                projectDescription = readInput(promptProperties.getProjectDescription());
             }
-        }
-        if (effort == null) {
-            boolean continueLoop = true;
-            while (continueLoop) {
-                try {
-                    effort = getAverageScore(promptProperties.getEffort());
-                    continueLoop = false;
-                } catch (InvalidScoreException e) {
-                    System.out.println(e.getMessage());
-                }
+            if (projectDescription.isEmpty()) {
+                return "Project description cannot be empty.";
             }
+            if (impact == null) {
+                impact = promptForScore(promptProperties.getImpact());
+            }
+            if (confidence == null) {
+                confidence = promptForScore(promptProperties.getConfidence());
+            }
+            if (ease == null) {
+                ease = promptForScore(promptProperties.getEase());
+            }
+            if (reach == null) {
+                reach = promptForScore(promptProperties.getReach());
+            }
+            if (effort == null) {
+                effort = promptForScore(promptProperties.getEffort());
+            }
+        } catch (CreationCancelledException e) {
+            return CANCELLED_MESSAGE;
         }
 
         if (impact < 1 || impact > 5 || confidence < 1 || confidence > 5 ||
@@ -153,5 +158,12 @@ public class CreateProjectCommand {
         public InvalidScoreException(String message) {
             super(message);
         }
+    }
+
+    /**
+     * Signals that the user asked to stop before the project was created. Kept private and static
+     * because it is an internal control signal rather than part of the command's surface.
+     */
+    private static class CreationCancelledException extends Exception {
     }
 }

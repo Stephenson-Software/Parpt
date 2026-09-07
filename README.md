@@ -44,6 +44,7 @@ Available commands:
 You'll be prompted to enter:
 - Project name and description
 - Detailed scoring for each category (1-5 scale)
+- Entering `q` or `quit` at any prompt (or pressing Ctrl-D) cancels creation without saving anything
 - Parpt will then:
     - Calculate ICE and RICE scores
     - Save the results to `projects.json`
