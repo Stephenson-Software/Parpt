@@ -33,6 +33,12 @@ public class ProjectRepository {
         projectJsonReaderWriter.writeJson(projects);
     }
 
+    public void remove(String projectName) throws ProjectNotFoundException {
+        Project project = findByName(projectName);
+        projects.remove(project);
+        projectJsonReaderWriter.writeJson(projects);
+    }
+
     public Project findByName(String projectName) throws ProjectNotFoundException {
         Project retrievedProject = projects.stream()
                 .filter(project -> project.getName().equals(projectName))

@@ -36,6 +36,10 @@ public class ProjectService {
         return projectRepository.findByName(projectName);
     }
 
+    public void deleteProject(String projectName) throws ProjectRepository.ProjectNotFoundException {
+        projectRepository.remove(projectName);
+    }
+
     public boolean isNameTaken(String projectName) {
         try {
             getProject(projectName);

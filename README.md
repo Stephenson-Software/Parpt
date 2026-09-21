@@ -38,6 +38,7 @@ Available commands:
 - `create` - Create a new project with guided scoring
 - `list` (alias: `ls`) - List all projects with scores, optionally sorted
 - `view <project-name>` - View detailed project information
+- `delete <project-name>` (alias: `rm`) - Delete a project by name
 - `export` - Export all projects to Markdown format, optionally sorted
 - `help` - Show available commands
 
@@ -69,6 +70,17 @@ list -s impact
 ```
 
 Supported `--sort` values are `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest; omitting `--sort` keeps the order in which projects were created.
+
+### Delete Examples
+```bash
+# Delete a project by name
+delete "My Project"
+
+# The 'rm' alias behaves identically
+rm "My Project"
+```
+
+Deleting a project removes it from `projects.json` immediately; there is no confirmation prompt and no undo. If no project has the given name, `delete` reports `Project not found: <project-name>` and nothing is changed.
 
 ### Export Examples
 ```bash
