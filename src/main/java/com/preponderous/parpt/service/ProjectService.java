@@ -2,6 +2,7 @@ package com.preponderous.parpt.service;
 
 import com.preponderous.parpt.domain.Project;
 import com.preponderous.parpt.repo.ProjectRepository;
+import com.preponderous.parpt.trace.UsageReporter;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,9 +10,11 @@ import java.util.List;
 @Service
 public class ProjectService {
     private final ProjectRepository projectRepository;
+    private final UsageReporter usageReporter;
 
-    public ProjectService(ProjectRepository projectRepository) {
+    public ProjectService(ProjectRepository projectRepository, UsageReporter usageReporter) {
         this.projectRepository = projectRepository;
+        this.usageReporter = usageReporter;
     }
 
     public Project createProject(String name, String description, int impact, int confidence, int ease, int reach, int effort) throws ProjectRepository.NameTakenException {
@@ -25,6 +28,7 @@ public class ProjectService {
                 .effort(effort)
                 .build();
         projectRepository.add(project);
+        usageReporter.projectCreated();
         return project;
     }
 

@@ -13,7 +13,7 @@ Parpt is an interactive CLI tool that helps developers, indie creators and teams
 - Obsidian-compatible markdown export with sorting by name, any scoring field or ICE/RICE scores
 - Rank and sort projects by monetization, potential, feasibility and effort
 - Spring Boot architecture with interactive shell
-- 100% local-first and open source
+- 100% local-first and open source (your projects never leave your machine; see [Usage reporting](#usage-reporting))
 
 ## Evaluation Framework
 Each project is evaluated across 5 dimensions using a detailed 1-5 scoring system:
@@ -105,6 +105,20 @@ export -s impact
 - [x] Obsidian-compatible markdown export with sorting
 - [ ] Visualization of project scores
 - [ ] Batch project comparison features
+
+## Usage reporting
+Usage reporting is on by default: Parpt reports that it was used to the maintainers' [trace](https://github.com/Stephenson-Software/trace) service at `https://trace.danielstephenson.dev`, sending a `startup` event carrying its name and version once per run, and a `project-created` event carrying nothing else when a project is saved. Nothing about your projects is sent: no project names, descriptions, scores or files, and no usernames, hostnames, IP addresses, paths or anything typed at the prompt. A one-line notice is printed the first time it runs on a machine (recorded in `~/.config/parpt/usage-reporting-notice-shown`).
+
+To turn it off, any one of these is enough:
+
+- `java -Dusage-reporting.enabled=false -jar build/libs/Parpt-*.jar`
+- `USAGE_REPORTING_ENABLED=false` in the environment
+- `TRACE_USAGE_REPORTING=off` (also `false`, `0`, `no`) in the environment — the switch every trace client honours, checked before Parpt's own setting
+- `DO_NOT_TRACK=1` (also `true`, `yes`) in the environment, per [consoledonottrack.com](https://consoledonottrack.com)
+
+The key under `usage-reporting.key` in `application.yaml` is the write key issued to Parpt; it can only add usage events and is not secret.
+
+Details on what trace collects and why: https://github.com/Stephenson-Software/trace#usage-reporting
 
 ## Contributing
 This project is in early development. Contributions, suggestions and issue reports are welcome!
