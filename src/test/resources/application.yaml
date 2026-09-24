@@ -40,3 +40,7 @@ app:
   projects:
     file: test-projects.json
     markdown-file: test-projects.md
+
+# Never report to the trace service from a test.
+usage-reporting:
+  enabled: false

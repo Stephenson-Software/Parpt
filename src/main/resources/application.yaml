@@ -39,3 +39,14 @@ app:
   projects:
     file: projects.json
     markdown-file: projects.md
+# Usage reporting: Parpt sends a 'startup' event (program name and version only) and a
+# 'project-created' event (nothing else) to the trace service so the maintainers can see the
+# tool is being used. Nothing about your projects is sent. Turn it off with
+# -Dusage-reporting.enabled=false or USAGE_REPORTING_ENABLED=false, or with
+# TRACE_USAGE_REPORTING=off / DO_NOT_TRACK=1 in the environment, which the client checks
+# first. The key is the write key issued to Parpt; it can only add usage events and is not
+# secret. Details: https://github.com/Stephenson-Software/trace#usage-reporting
+usage-reporting:
+  enabled: true
+  endpoint: https://trace.danielstephenson.dev
+  key: mCORVbSTFW2qz9szPhnDU2njGKPpvq0MAtd8OUlKw0Q
