@@ -14,14 +14,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 
 /**
  * Reports that Parpt was used, to the trace service, and never gets in the way of the shell.
  *
  * <p>Two events are sent, both off the calling thread through the vendored {@link TraceClient}:
- * {@code startup} once per process (tagged with the program version only) and
- * {@code project-created} when a project is saved, with no tags at all. Nothing about the
+ * {@code startup} once per process and {@code project-created} when a project is saved, each
+ * tagged with the program version only. Nothing about the
  * projects themselves is sent: no names, descriptions, scores, paths or hostnames.
  *
  * <p>Reporting is on by default and switched off with {@code usage-reporting.enabled=false}
@@ -48,9 +47,10 @@ public class UsageReporter {
     static final String NOTICE_MARKER_FILE = "usage-reporting-notice-shown";
     /** The public page describing what trace collects and every way to turn it off. */
     static final String DETAILS_URL = "https://github.com/Stephenson-Software/trace#usage-reporting";
+    /** Sent as the version when not run from a built JAR. */
+    static final String UNKNOWN_VERSION = "unknown";
 
     private final TraceClient client;
-    private final String version;
     private final Path noticeMarker;
 
     @Autowired
@@ -62,18 +62,18 @@ public class UsageReporter {
     }
 
     UsageReporter(String enabled, String endpoint, String key, String version, Path noticeMarker) {
-        this.client = buildClient(enabled, endpoint, key);
-        this.version = version;
+        this.client = buildClient(enabled, endpoint, key,
+                version == null || version.isBlank() ? UNKNOWN_VERSION : version);
         this.noticeMarker = noticeMarker;
     }
 
-    private static TraceClient buildClient(String enabled, String endpoint, String key) {
+    private static TraceClient buildClient(String enabled, String endpoint, String key, String version) {
         // A blank value (an empty environment variable, say) means "default", i.e. on.
         boolean on = enabled == null || enabled.isBlank() || !"false".equalsIgnoreCase(enabled.trim());
         try {
             // The program's own switch goes to the builder rather than short-circuiting here, so
             // the client applies its precedence (environment first).
-            return TraceClient.builder(endpoint, APPLICATION)
+            return TraceClient.builder(endpoint, APPLICATION, version)
                     .key(key)
                     .enabled(on)
                     .logger(java.util.logging.Logger.getLogger(UsageReporter.class.getName()))
@@ -93,7 +93,7 @@ public class UsageReporter {
         return Paths.get(home, ".config", "parpt", NOTICE_MARKER_FILE);
     }
 
-    /** The version from the JAR manifest, or null when not run from a built JAR. */
+    /** The version from the JAR manifest, or null when not run from a built JAR (sent as "unknown"). */
     static String resolveVersion() {
         Package pkg = ParptApplication.class.getPackage();
         String fromManifest = pkg == null ? null : pkg.getImplementationVersion();
@@ -118,14 +118,10 @@ public class UsageReporter {
             return;
         }
         showFirstRunNoticeOnce();
-        if (version == null) {
-            client.report(STARTUP_EVENT);
-        } else {
-            client.report(STARTUP_EVENT, null, Collections.singletonMap("version", version));
-        }
+        client.report(STARTUP_EVENT);
     }
 
-    /** Reports that a project was saved. Carries nothing about the project. */
+    /** Reports that a project was saved. Carries the version only, nothing about the project. */
     public void projectCreated() {
         client.report(PROJECT_CREATED_EVENT);
     }
@@ -141,7 +137,7 @@ public class UsageReporter {
 
     /** The text shown once, the first time reporting runs on a machine. */
     static String firstRunNotice() {
-        return "Usage reporting is on: Parpt sends its name and version (a startup event) and a "
+        return "Usage reporting is on: Parpt sends its name and version with a startup event and a "
                 + "project-created event (nothing else) to https://trace.danielstephenson.dev - nothing "
                 + "about your projects or this machine. Turn it off with -Dusage-reporting.enabled=false, "
                 + "USAGE_REPORTING_ENABLED=false or TRACE_USAGE_REPORTING=off. Details: " + DETAILS_URL;

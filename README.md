@@ -107,7 +107,7 @@ export -s impact
 - [ ] Batch project comparison features
 
 ## Usage reporting
-Usage reporting is on by default: Parpt reports that it was used to the maintainers' [trace](https://github.com/Stephenson-Software/trace) service at `https://trace.danielstephenson.dev`, sending a `startup` event carrying its name and version once per run, and a `project-created` event carrying nothing else when a project is saved. Nothing about your projects is sent: no project names, descriptions, scores or files, and no usernames, hostnames, IP addresses, paths or anything typed at the prompt. A one-line notice is printed the first time it runs on a machine (recorded in `~/.config/parpt/usage-reporting-notice-shown`).
+Usage reporting is on by default: Parpt reports that it was used to the maintainers' [trace](https://github.com/Stephenson-Software/trace) service at `https://trace.danielstephenson.dev`, sending a `startup` event carrying its name and version once per run, and a `project-created` event carrying only the version when a project is saved. Nothing about your projects is sent: no project names, descriptions, scores or files, and no usernames, hostnames, IP addresses, paths or anything typed at the prompt. A one-line notice is printed the first time it runs on a machine (recorded in `~/.config/parpt/usage-reporting-notice-shown`).
 
 To turn it off, any one of these is enough:
 

@@ -74,7 +74,7 @@ class UsageReporterTest {
     }
 
     @Test
-    void sendsStartupWithVersionAndProjectCreatedWithNothingElse(@TempDir Path home) {
+    void sendsStartupAndProjectCreatedWithTheVersionOnly(@TempDir Path home) {
         if (environmentOptsOut()) {
             return; // the environment has switched reporting off; that path is the client's to test
         }
@@ -89,7 +89,7 @@ class UsageReporterTest {
         assertTrue(bodies.get(0).contains("\"name\":\"startup\""), bodies.get(0));
         assertTrue(bodies.get(0).contains("\"version\":\"1.2.3\""), bodies.get(0));
         assertTrue(bodies.get(1).contains("\"name\":\"project-created\""), bodies.get(1));
-        assertFalse(bodies.get(1).contains("tags\":{\""), bodies.get(1));
+        assertTrue(bodies.get(1).endsWith("\"tags\":{\"version\":\"1.2.3\"}}"), bodies.get(1));
         assertTrue(Files.exists(marker), "the first-run notice is recorded as shown");
     }
 
