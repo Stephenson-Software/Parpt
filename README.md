@@ -38,6 +38,7 @@ Available commands:
 - `create` - Create a new project with guided scoring
 - `list` (alias: `ls`) - List all projects with scores, optionally sorted
 - `view <project-name>` - View detailed project information
+- `update <project-name>` - Change a project's description or scores
 - `delete <project-name>` (alias: `rm`) - Delete a project by name
 - `export` - Export all projects to Markdown format, optionally sorted
 - `help` - Show available commands
@@ -70,6 +71,18 @@ list -s impact
 ```
 
 Supported `--sort` values are `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest; omitting `--sort` keeps the order in which projects were created.
+
+### Update Examples
+```bash
+# Change a project's description
+update "My Project" --description "A sharper pitch"
+
+# Change one or more scores (1-5); fields not given keep their current values
+update "My Project" --impact 5 --effort 2
+update "My Project" -c 4 -r 3
+```
+
+`update` accepts `--description` (`-d`), `--impact` (`-i`), `--confidence` (`-c`), `--ease` (`-e`), `--reach` (`-r`) and `--effort` (`-f`), and at least one of them must be given. The change is saved to `projects.json` immediately and the project keeps its place in creation order; the new ICE and RICE scores are printed. If no project has the given name, `update` reports `Project not found: <project-name>`; an empty description or a score outside 1-5 is rejected and nothing is changed. A project cannot be renamed with `update`.
 
 ### Delete Examples
 ```bash
