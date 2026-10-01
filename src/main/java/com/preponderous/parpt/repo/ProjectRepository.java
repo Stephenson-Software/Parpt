@@ -39,6 +39,16 @@ public class ProjectRepository {
         projectJsonReaderWriter.writeJson(projects);
     }
 
+    /**
+     * Replaces the stored project that has the same name as the given one, keeping its position
+     * in creation order.
+     */
+    public void update(Project project) throws ProjectNotFoundException {
+        int index = projects.indexOf(findByName(project.getName()));
+        projects.set(index, project);
+        projectJsonReaderWriter.writeJson(projects);
+    }
+
     public Project findByName(String projectName) throws ProjectNotFoundException {
         Project retrievedProject = projects.stream()
                 .filter(project -> project.getName().equals(projectName))

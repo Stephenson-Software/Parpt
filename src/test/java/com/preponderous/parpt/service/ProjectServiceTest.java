@@ -101,6 +101,51 @@ class ProjectServiceTest {
     }
 
     @Test
+    void updateProject_ShouldChangeOnlyGivenFieldsAndPersistViaRepository() throws Exception {
+        Project alpha = Project.builder().name("Alpha").description("First").impact(1).confidence(2).ease(3).reach(4).effort(5).build();
+        when(projectRepository.findByName("Alpha")).thenReturn(alpha);
+
+        Project updated = service.updateProject("Alpha", "Changed", null, 4, null, 1, null);
+
+        ArgumentCaptor<Project> captor = ArgumentCaptor.forClass(Project.class);
+        verify(projectRepository, times(1)).update(captor.capture());
+        assertThat(updated).isSameAs(captor.getValue());
+        assertThat(updated.getName()).isEqualTo("Alpha");
+        assertThat(updated.getDescription()).isEqualTo("Changed");
+        assertThat(updated.getImpact()).isEqualTo(1);
+        assertThat(updated.getConfidence()).isEqualTo(4);
+        assertThat(updated.getEase()).isEqualTo(3);
+        assertThat(updated.getReach()).isEqualTo(1);
+        assertThat(updated.getEffort()).isEqualTo(5);
+        verifyNoInteractions(usageReporter);
+    }
+
+    @Test
+    void updateProject_WithAllFieldsGiven_ShouldApplyEachToItsOwnField() throws Exception {
+        when(projectRepository.findByName("Alpha")).thenReturn(Project.builder().name("Alpha").description("First").build());
+
+        Project updated = service.updateProject("Alpha", "Changed", 5, 4, 3, 2, 1);
+
+        // Distinct score values catch any argument transposed between the signature and the builder
+        assertThat(updated.getImpact()).isEqualTo(5);
+        assertThat(updated.getConfidence()).isEqualTo(4);
+        assertThat(updated.getEase()).isEqualTo(3);
+        assertThat(updated.getReach()).isEqualTo(2);
+        assertThat(updated.getEffort()).isEqualTo(1);
+    }
+
+    @Test
+    void updateProject_WithUnknownName_ShouldPropagateNotFoundAndNotUpdate() throws Exception {
+        when(projectRepository.findByName("Missing"))
+                .thenThrow(new ProjectRepository.ProjectNotFoundException("Project not found: Missing"));
+
+        assertThrows(ProjectRepository.ProjectNotFoundException.class,
+                () -> service.updateProject("Missing", "Changed", 1, 1, 1, 1, 1));
+
+        verify(projectRepository, never()).update(any(Project.class));
+    }
+
+    @Test
     void deleteProject_ShouldRemoveByNameAndNotReportUsage() throws Exception {
         service.deleteProject("Alpha");
 

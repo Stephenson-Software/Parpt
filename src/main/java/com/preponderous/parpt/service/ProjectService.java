@@ -40,6 +40,25 @@ public class ProjectService {
         return projectRepository.findByName(projectName);
     }
 
+    /**
+     * Updates the named project, changing only the fields given; a null argument keeps the
+     * project's current value.
+     */
+    public Project updateProject(String name, String description, Integer impact, Integer confidence, Integer ease, Integer reach, Integer effort) throws ProjectRepository.ProjectNotFoundException {
+        Project existing = projectRepository.findByName(name);
+        Project updated = Project.builder()
+                .name(existing.getName())
+                .description(description != null ? description : existing.getDescription())
+                .impact(impact != null ? impact : existing.getImpact())
+                .confidence(confidence != null ? confidence : existing.getConfidence())
+                .ease(ease != null ? ease : existing.getEase())
+                .reach(reach != null ? reach : existing.getReach())
+                .effort(effort != null ? effort : existing.getEffort())
+                .build();
+        projectRepository.update(updated);
+        return updated;
+    }
+
     public void deleteProject(String projectName) throws ProjectRepository.ProjectNotFoundException {
         projectRepository.remove(projectName);
     }

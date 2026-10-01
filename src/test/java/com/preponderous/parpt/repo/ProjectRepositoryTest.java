@@ -102,6 +102,33 @@ class ProjectRepositoryTest {
     }
 
     @Test
+    void update_ShouldReplaceProjectInPlaceAndPersistOnce() throws Exception {
+        repository.add(beta);
+        writtenNames.clear();
+        clearInvocations(projectJsonReaderWriter);
+        Project changedAlpha = Project.builder().name("Alpha").description("Changed").impact(5).confidence(5).ease(5).reach(5).effort(5).build();
+
+        repository.update(changedAlpha);
+
+        assertThat(repository.findAll()).containsExactly(changedAlpha, beta);
+        assertThat(repository.findByName("Alpha")).isSameAs(changedAlpha);
+        verify(projectJsonReaderWriter, times(1)).writeJson(anyList());
+        assertThat(writtenNames).containsExactly(List.of("Alpha", "Beta"));
+    }
+
+    @Test
+    void update_WithUnknownName_ShouldThrowAndNotPersist() {
+        Project missing = Project.builder().name("Missing").description("Nowhere").build();
+
+        ProjectRepository.ProjectNotFoundException exception = assertThrows(
+                ProjectRepository.ProjectNotFoundException.class, () -> repository.update(missing));
+
+        assertThat(exception.getMessage()).isEqualTo("Project not found: Missing");
+        assertThat(repository.findAll()).containsExactly(alpha);
+        verify(projectJsonReaderWriter, never()).writeJson(anyList());
+    }
+
+    @Test
     void clear_ShouldEmptyProjectsAndPersistOnce() {
         repository.clear();
 
