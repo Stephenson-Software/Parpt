@@ -4,6 +4,7 @@ import com.preponderous.parpt.domain.Project;
 import com.preponderous.parpt.repo.ProjectRepository;
 import com.preponderous.parpt.score.ScoreCalculator;
 import com.preponderous.parpt.service.ProjectService;
+import com.preponderous.parpt.util.InputValidator;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
@@ -19,10 +20,6 @@ public class UpdateProjectCommand {
     public UpdateProjectCommand(ProjectService projectService, ScoreCalculator scoreCalculator) {
         this.projectService = projectService;
         this.scoreCalculator = scoreCalculator;
-    }
-
-    private static boolean isOutOfRange(Integer score) {
-        return score != null && (score < 1 || score > 5);
     }
 
     @ShellMethod(key = "update", value = "Updates the description or scores of a specific project by name.")
@@ -41,7 +38,7 @@ public class UpdateProjectCommand {
         if (description != null && description.isEmpty()) {
             return "Project description cannot be empty.";
         }
-        if (Stream.of(impact, confidence, ease, reach, effort).anyMatch(UpdateProjectCommand::isOutOfRange)) {
+        if (!InputValidator.areValidScores(impact, confidence, ease, reach, effort)) {
             return "All scores must be between 1 and 5.";
         }
 

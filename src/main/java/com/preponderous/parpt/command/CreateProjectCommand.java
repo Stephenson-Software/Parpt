@@ -6,6 +6,7 @@ import com.preponderous.parpt.repo.ProjectRepository;
 import com.preponderous.parpt.score.ScoreCalculator;
 import com.preponderous.parpt.service.ProjectService;
 import com.preponderous.parpt.util.ConsoleInputProvider;
+import com.preponderous.parpt.util.InputValidator;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
@@ -56,7 +57,7 @@ public class CreateProjectCommand {
         for (String prompt : prompts) {
             try {
                 int score = Integer.parseInt(readInput(prompt));
-                if (score < 1 || score > 5) {
+                if (!InputValidator.isValidScore(score)) {
                     throw new InvalidScoreException("Invalid score. Must be between 1 and 5.");
                 }
                 total += score;
@@ -133,8 +134,7 @@ public class CreateProjectCommand {
             return CANCELLED_MESSAGE;
         }
 
-        if (impact < 1 || impact > 5 || confidence < 1 || confidence > 5 ||
-                ease < 1 || ease > 5 || reach < 1 || reach > 5 || effort < 1 || effort > 5) {
+        if (!InputValidator.areValidScores(impact, confidence, ease, reach, effort)) {
             return "All scores must be between 1 and 5.";
         }
 
