@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -20,7 +21,7 @@ import java.nio.file.Paths;
  *
  * <p>Two events are sent, both off the calling thread through the vendored {@link TraceClient}:
  * {@code startup} once per process and {@code project-created} when a project is saved, each
- * tagged with the program version only. Nothing about the
+ * tagged with the program version and a random installation ID only. Nothing about the
  * projects themselves is sent: no names, descriptions, scores, paths or hostnames.
  *
  * <p>Reporting is on by default and switched off with {@code usage-reporting.enabled=false}
@@ -63,11 +64,20 @@ public class UsageReporter {
 
     UsageReporter(String enabled, String endpoint, String key, String version, Path noticeMarker) {
         this.client = buildClient(enabled, endpoint, key,
-                version == null || version.isBlank() ? UNKNOWN_VERSION : version);
+                version == null || version.isBlank() ? UNKNOWN_VERSION : version, installIdFile(noticeMarker));
         this.noticeMarker = noticeMarker;
     }
 
-    private static TraceClient buildClient(String enabled, String endpoint, String key, String version) {
+    /**
+     * The installation ID file, {@value TraceInstallId#FILE_NAME}, next to the notice marker in
+     * Parpt's own directory ({@code ~/.config/parpt/}); null if there is no usable home.
+     */
+    static File installIdFile(Path noticeMarker) {
+        return noticeMarker == null ? null : noticeMarker.resolveSibling(TraceInstallId.FILE_NAME).toFile();
+    }
+
+    private static TraceClient buildClient(String enabled, String endpoint, String key, String version,
+                                           File installIdFile) {
         // A blank value (an empty environment variable, say) means "default", i.e. on.
         boolean on = enabled == null || enabled.isBlank() || !"false".equalsIgnoreCase(enabled.trim());
         try {
@@ -76,6 +86,8 @@ public class UsageReporter {
             return TraceClient.builder(endpoint, APPLICATION, version)
                     .key(key)
                     .enabled(on)
+                    .installId(TraceInstallId.fromEnvironment())
+                    .installIdFile(installIdFile)
                     .logger(java.util.logging.Logger.getLogger(UsageReporter.class.getName()))
                     .build();
         } catch (RuntimeException badConfiguration) {
@@ -137,9 +149,9 @@ public class UsageReporter {
 
     /** The text shown once, the first time reporting runs on a machine. */
     static String firstRunNotice() {
-        return "Usage reporting is on: Parpt sends its name and version with a startup event and a "
-                + "project-created event (nothing else) to https://trace.danielstephenson.dev - nothing "
-                + "about your projects or this machine. Turn it off with -Dusage-reporting.enabled=false, "
+        return "Usage reporting is on: Parpt sends its name, version and a random installation ID with a "
+                + "startup event and a project-created event (nothing else) to https://trace.danielstephenson.dev"
+                + " - nothing about you or your projects. Turn it off with -Dusage-reporting.enabled=false, "
                 + "USAGE_REPORTING_ENABLED=false or TRACE_USAGE_REPORTING=off. Details: " + DETAILS_URL;
     }
 
