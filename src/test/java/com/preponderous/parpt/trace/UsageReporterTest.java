@@ -74,7 +74,7 @@ class UsageReporterTest {
     }
 
     @Test
-    void sendsStartupAndProjectCreatedWithTheVersionOnly(@TempDir Path home) {
+    void sendsStartupAndProjectCreatedWithTheVersionOnly(@TempDir Path home) throws Exception {
         if (environmentOptsOut()) {
             return; // the environment has switched reporting off; that path is the client's to test
         }
@@ -89,8 +89,29 @@ class UsageReporterTest {
         assertTrue(bodies.get(0).contains("\"name\":\"startup\""), bodies.get(0));
         assertTrue(bodies.get(0).contains("\"version\":\"1.2.3\""), bodies.get(0));
         assertTrue(bodies.get(1).contains("\"name\":\"project-created\""), bodies.get(1));
-        assertTrue(bodies.get(1).endsWith("\"tags\":{\"version\":\"1.2.3\"}}"), bodies.get(1));
+        String installId = Files.readString(marker.resolveSibling("trace-install-id")).trim();
+        assertTrue(bodies.get(1).endsWith("\"tags\":{\"version\":\"1.2.3\",\"install\":\"" + installId + "\"}}"),
+                bodies.get(1));
         assertTrue(Files.exists(marker), "the first-run notice is recorded as shown");
+    }
+
+    @Test
+    void keepsTheInstallationIdNextToTheMarkerAndOnlyWhenEnabled(@TempDir Path home) throws Exception {
+        Path marker = home.resolve("config").resolve("marker");
+        Path idFile = marker.resolveSibling("trace-install-id");
+        new UsageReporter("false", endpoint, "a-key", "1.0", marker).close();
+        new UsageReporter("true", endpoint, "", "1.0", marker).close();
+        assertFalse(Files.exists(idFile), "a disabled client never writes the ID");
+        if (environmentOptsOut()) {
+            return;
+        }
+        UsageReporter first = new UsageReporter("true", endpoint, "a-key", "1.0", marker);
+        first.close();
+        String id = Files.readString(idFile).trim();
+        assertTrue(id.matches("[0-9a-f-]{36}"), id);
+        UsageReporter second = new UsageReporter("true", endpoint, "a-key", "1.0", marker);
+        second.close();
+        assertEquals(id, Files.readString(idFile).trim(), "a later start reuses it");
     }
 
     @Test

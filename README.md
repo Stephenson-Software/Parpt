@@ -122,6 +122,8 @@ export -s impact
 ## Usage reporting
 Usage reporting is on by default: Parpt reports that it was used to the maintainers' [trace](https://github.com/Stephenson-Software/trace) service at `https://trace.danielstephenson.dev`, sending a `startup` event carrying its name and version once per run, and a `project-created` event carrying only the version when a project is saved. Nothing about your projects is sent: no project names, descriptions, scores or files, and no usernames, hostnames, IP addresses, paths or anything typed at the prompt. A one-line notice is printed the first time it runs on a machine (recorded in `~/.config/parpt/usage-reporting-notice-shown`).
 
+Every event also carries a random installation ID (the tag `install`), so installations can be counted rather than events. It is a random UUID written the first time reporting runs to `~/.config/parpt/trace-install-id`, next to the notice marker, and reused after that; it identifies no person, account or address. Delete the file to get a new one, or set `TRACE_INSTALL_ID` in the environment to pin one. Every opt-out below also stops it: when reporting is off, no ID is made up and the file is neither read nor written.
+
 To turn it off, any one of these is enough:
 
 - `java -Dusage-reporting.enabled=false -jar build/libs/Parpt-*.jar`
