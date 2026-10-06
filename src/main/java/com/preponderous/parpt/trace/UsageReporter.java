@@ -47,7 +47,7 @@ public class UsageReporter {
     static final String PROJECT_CREATED_EVENT = "project-created";
     static final String NOTICE_MARKER_FILE = "usage-reporting-notice-shown";
     /** The public page describing what trace collects and every way to turn it off. */
-    static final String DETAILS_URL = "https://github.com/Stephenson-Software/trace#usage-reporting";
+    static final String DETAILS_URL = "https://danielstephenson.dev/usage-reporting";
     /** Sent as the version when not run from a built JAR. */
     static final String UNKNOWN_VERSION = "unknown";
 
