@@ -45,7 +45,7 @@ app:
 # -Dusage-reporting.enabled=false or USAGE_REPORTING_ENABLED=false, or with
 # TRACE_USAGE_REPORTING=off / DO_NOT_TRACK=1 in the environment, which the client checks
 # first. The key is the write key issued to Parpt; it can only add usage events and is not
-# secret. Details: https://github.com/Stephenson-Software/trace#usage-reporting
+# secret. Details: https://danielstephenson.dev/usage-reporting
 usage-reporting:
   enabled: true
   endpoint: https://trace.danielstephenson.dev
