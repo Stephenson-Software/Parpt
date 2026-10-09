@@ -31,7 +31,7 @@ cd Parpt
 ./gradlew build
 ```
 
-The build writes two jars to `build/libs/`: the runnable `Parpt-<version>.jar` and a `Parpt-<version>-plain.jar` that cannot be run on its own. Use the one without `-plain`, e.g. `build/libs/Parpt-0.3.0-SNAPSHOT-8-8-2026.jar`. A bare `build/libs/Parpt-*.jar` glob matches both, and the shell may pass the plain jar first, in which case Java fails with `no main manifest attribute`.
+The build writes two jars to `build/libs/`: the runnable `Parpt-<version>.jar` and a `Parpt-<version>-plain.jar` that cannot be run on its own. Use the one without `-plain` (`<version>` is the `version` set in `build.gradle`). A bare `build/libs/Parpt-*.jar` glob matches both, and the shell may pass the plain jar first, in which case Java fails with `no main manifest attribute`.
 
 ## Getting Started
 Run the CLI from the directory where your data should live:
