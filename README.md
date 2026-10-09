@@ -9,9 +9,9 @@ Parpt is an interactive CLI tool that helps developers, indie creators and teams
 - Guided project scoring using ICE and RICE methods
 - Calculate ICE (Impact, Confidence, Ease) scores
 - Calculate RICE (Reach, Impact, Confidence, Effort) scores
-- Export projects to Markdown and JSON formats
+- Save projects to a local JSON file and export them to Markdown
 - Obsidian-compatible markdown export with sorting by name, any scoring field or ICE/RICE scores
-- Rank and sort projects by monetization, potential, feasibility and effort
+- List projects sorted by name, by any scoring field (impact, confidence, ease, reach, effort) or by ICE/RICE score
 - Spring Boot architecture with interactive shell
 - 100% local-first and open source (your projects never leave your machine; see [Usage reporting](#usage-reporting))
 
@@ -24,34 +24,54 @@ Each project is evaluated across 5 dimensions using a detailed 1-5 scoring syste
 - **Effort**: Development time, team size, maintenance burden, ongoing work
 
 ## Installation
-Clone and build manually:
+Clone and build manually (requires JDK 21):
+```bash
 git clone https://github.com/Stephenson-Software/Parpt.git
 cd Parpt
 ./gradlew build
-java -jar build/libs/Parpt-*.jar
+```
+
+The build writes two jars to `build/libs/`: the runnable `Parpt-<version>.jar` and a `Parpt-<version>-plain.jar` that cannot be run on its own. Use the one without `-plain` (`<version>` is the `version` set in `build.gradle`). A bare `build/libs/Parpt-*.jar` glob matches both, and the shell may pass the plain jar first, in which case Java fails with `no main manifest attribute`.
 
 ## Getting Started
-Run the CLI:
-java -jar build/libs/Parpt-*.jar
+Run the CLI from the directory where your data should live:
+```bash
+java -jar build/libs/Parpt-<version>.jar
+```
 
 Available commands:
-- `create` - Create a new project with guided scoring
+- `create` - Create a new project with guided scoring, or straight from options
 - `list` (alias: `ls`) - List all projects with scores, optionally sorted
 - `view <project-name>` - View detailed project information
 - `update <project-name>` - Change a project's description or scores
 - `delete <project-name>` (alias: `rm`) - Delete a project by name
-- `export` - Export all projects to Markdown format, optionally sorted
+- `export` - Export all projects to Markdown format, sorted by ICE score unless another order is chosen
 - `help` - Show available commands
 
 You'll be prompted to enter:
 - Project name and description
-- Detailed scoring for each category (1-5 scale)
+- Detailed scoring for each category (1-5 scale): each category asks four questions, and its score is their average, rounded to the nearest whole number
 - Entering `q` or `quit` at any prompt (or pressing Ctrl-D) cancels creation without saving anything
 - Parpt will then:
     - Calculate ICE and RICE scores
-    - Save the results to `projects.json`
-    - Allow you to export to `projects.md` sorted by priority
+    - Save the results to `projects.json` in the directory Parpt was started from
+    - Allow you to export to `projects.md` (in the same directory) sorted by priority
     - Help you sort and review your efforts over time
+
+### Create Examples
+```bash
+# Answer every question interactively
+create
+
+# Skip the questions by giving everything as options
+create --name "My Project" --description "A short pitch" --impact 4 --confidence 3 --ease 5 --reach 2 --effort 3
+create -n "My Project" -d "A short pitch" -i 4 -c 3 -e 5 -r 2 -f 3
+
+# Give some options and be asked only for the rest
+create --name "My Project" --impact 4
+```
+
+Scores given as options are used as they are rather than averaged; a score outside 1-5 is rejected with `All scores must be between 1 and 5.` and nothing is saved. A name already in use is rejected before any further question is asked.
 
 ### List Examples
 ```bash
@@ -126,7 +146,7 @@ Every event also carries a random installation ID (the tag `install`), so instal
 
 To turn it off, any one of these is enough:
 
-- `java -Dusage-reporting.enabled=false -jar build/libs/Parpt-*.jar`
+- `java -Dusage-reporting.enabled=false -jar build/libs/Parpt-<version>.jar`
 - `USAGE_REPORTING_ENABLED=false` in the environment
 - `TRACE_USAGE_REPORTING=off` (also `false`, `0`, `no`) in the environment — the switch every trace client honours, checked before Parpt's own setting
 - `DO_NOT_TRACK=1` (also `true`, `yes`) in the environment, per [consoledonottrack.com](https://consoledonottrack.com)

@@ -30,7 +30,7 @@ This project uses GitHub Actions for continuous integration. All pull requests a
 The CI pipeline ensures code quality by:
 - ✅ Running all unit tests including markdown export functionality
 - ✅ Compiling both main and test code
-- ✅ Generating test coverage reports
+- ✅ Generating JUnit test reports (no code-coverage tool is configured)
 - ✅ Uploading build artifacts
 
 Make sure all tests pass locally before submitting a pull request. The CI checks must pass before merging.
