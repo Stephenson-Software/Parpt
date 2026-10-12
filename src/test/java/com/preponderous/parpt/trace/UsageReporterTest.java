@@ -6,7 +6,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -16,6 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Exercises the reporter against a loopback stub; nothing here ever reaches the real service. */
@@ -112,6 +115,154 @@ class UsageReporterTest {
         UsageReporter second = new UsageReporter("true", endpoint, "a-key", "1.0", marker);
         second.close();
         assertEquals(id, Files.readString(idFile).trim(), "a later start reuses it");
+    }
+
+    @Test
+    void disabledReasonNamesParptsOwnSwitchRatherThanTheClientsConfigFile(@TempDir Path home) {
+        if (environmentOptsOut()) {
+            return; // the environment reason takes precedence over the program's own switch
+        }
+        UsageReporter reporter = new UsageReporter("false", endpoint, "a-key", "1.0", home.resolve("marker"));
+        reporter.close();
+
+        assertEquals("usage-reporting.enabled", reporter.disabledReason());
+    }
+
+    @Test
+    void disabledReasonPassesTheMissingKeyReasonThrough(@TempDir Path home) {
+        if (environmentOptsOut()) {
+            return;
+        }
+        UsageReporter reporter = new UsageReporter("true", endpoint, "", "1.0", home.resolve("marker"));
+        reporter.close();
+
+        assertEquals(TraceClient.REASON_NO_KEY, reporter.disabledReason());
+    }
+
+    @Test
+    void disabledReasonIsNullWhileReportingIsOn(@TempDir Path home) {
+        if (environmentOptsOut()) {
+            return;
+        }
+        UsageReporter reporter = new UsageReporter("true", endpoint, "a-key", "1.0", home.resolve("marker"));
+        reporter.close();
+
+        assertTrue(reporter.isEnabled());
+        assertNull(reporter.disabledReason());
+    }
+
+    @Test
+    void onlyFalseIgnoringCaseAndSpacesSwitchesReportingOff(@TempDir Path home) {
+        for (String off : new String[] {"false", "FALSE", " False "}) {
+            UsageReporter reporter = new UsageReporter(off, endpoint, "a-key", "1.0", home.resolve("marker"));
+            reporter.close();
+            assertFalse(reporter.isEnabled(), "'" + off + "' switches reporting off");
+        }
+        if (environmentOptsOut()) {
+            return;
+        }
+        for (String on : new String[] {null, "", "  ", "true", "no", "0"}) {
+            UsageReporter reporter = new UsageReporter(on, endpoint, "a-key", "1.0", home.resolve("marker"));
+            reporter.close();
+            assertTrue(reporter.isEnabled(), "'" + on + "' leaves reporting on");
+        }
+    }
+
+    @Test
+    void anUnusableEndpointDisablesReportingInsteadOfThrowing(@TempDir Path home) {
+        UsageReporter reporter = new UsageReporter("true", " ", "a-key", "1.0", home.resolve("marker"));
+        reporter.start();
+        reporter.projectCreated();
+        reporter.close();
+
+        assertFalse(reporter.isEnabled());
+        assertTrue(bodies.isEmpty());
+    }
+
+    @Test
+    void aMissingVersionIsSentAsUnknown(@TempDir Path home) {
+        if (environmentOptsOut()) {
+            return;
+        }
+        UsageReporter blank = new UsageReporter("true", endpoint, "a-key", " ", home.resolve("a").resolve("marker"));
+        blank.projectCreated();
+        blank.close();
+        UsageReporter absent = new UsageReporter("true", endpoint, "a-key", null, home.resolve("b").resolve("marker"));
+        absent.projectCreated();
+        absent.close();
+
+        assertEquals(2, bodies.size());
+        for (String body : bodies) {
+            assertTrue(body.contains("\"version\":\"unknown\""), body);
+        }
+    }
+
+    @Test
+    void theFirstRunNoticeIsPrintedOnceAndThenRemembered(@TempDir Path home) throws Exception {
+        if (environmentOptsOut()) {
+            return;
+        }
+        Path marker = home.resolve("config").resolve("marker");
+
+        String firstRun = capturingStandardOut(() -> {
+            UsageReporter reporter = new UsageReporter("true", endpoint, "a-key", "1.0", marker);
+            reporter.start();
+            reporter.close();
+        });
+        String secondRun = capturingStandardOut(() -> {
+            UsageReporter reporter = new UsageReporter("true", endpoint, "a-key", "1.0", marker);
+            reporter.start();
+            reporter.close();
+        });
+
+        assertTrue(firstRun.contains(UsageReporter.firstRunNotice()), firstRun);
+        assertFalse(secondRun.contains("Usage reporting is on"), secondRun);
+        assertTrue(Files.exists(marker));
+        assertEquals(2, bodies.size(), "both runs still send their startup event");
+    }
+
+    @Test
+    void withNoUsableHomeTheStartupEventIsStillSentWithoutANotice() throws Exception {
+        if (environmentOptsOut()) {
+            return;
+        }
+        assertNull(UsageReporter.installIdFile(null));
+
+        String output = capturingStandardOut(() -> {
+            UsageReporter reporter = new UsageReporter("true", endpoint, "a-key", "1.0", null);
+            reporter.start();
+            reporter.close();
+        });
+
+        assertFalse(output.contains("Usage reporting is on"), output);
+        assertEquals(1, bodies.size());
+        assertTrue(bodies.get(0).contains("\"name\":\"startup\""), bodies.get(0));
+    }
+
+    @Test
+    void theNoticeMarkerLivesUnderTheUsersConfigDirectory() {
+        String original = System.getProperty("user.home");
+        try {
+            System.setProperty("user.home", "/home/someone");
+            assertEquals(Path.of("/home/someone", ".config", "parpt", "usage-reporting-notice-shown"),
+                    UsageReporter.defaultNoticeMarker());
+            System.setProperty("user.home", " ");
+            assertNull(UsageReporter.defaultNoticeMarker());
+        } finally {
+            System.setProperty("user.home", original);
+        }
+    }
+
+    private static String capturingStandardOut(Runnable action) {
+        PrintStream original = System.out;
+        ByteArrayOutputStream captured = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(captured, true, StandardCharsets.UTF_8));
+        try {
+            action.run();
+        } finally {
+            System.setOut(original);
+        }
+        return captured.toString(StandardCharsets.UTF_8);
     }
 
     @Test
