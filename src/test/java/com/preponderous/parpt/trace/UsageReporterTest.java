@@ -180,6 +180,21 @@ class UsageReporterTest {
     }
 
     @Test
+    void disabledReasonBlamesTheConfigurationRatherThanTheSwitchWhenNoClientCanBeBuilt(@TempDir Path home) {
+        if (environmentOptsOut()) {
+            return; // the environment reason takes precedence over a bad configuration
+        }
+        UsageReporter blankEndpoint = new UsageReporter("true", " ", "a-key", "1.0", home.resolve("marker"));
+        blankEndpoint.close();
+        UsageReporter overlongVersion = new UsageReporter("true", endpoint, "a-key", "1".repeat(1000),
+                home.resolve("marker"));
+        overlongVersion.close();
+
+        assertEquals(UsageReporter.INVALID_CONFIGURATION, blankEndpoint.disabledReason());
+        assertEquals(UsageReporter.INVALID_CONFIGURATION, overlongVersion.disabledReason());
+    }
+
+    @Test
     void aMissingVersionIsSentAsUnknown(@TempDir Path home) {
         if (environmentOptsOut()) {
             return;

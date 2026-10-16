@@ -50,8 +50,11 @@ public class UsageReporter {
     static final String DETAILS_URL = "https://danielstephenson.dev/usage-reporting";
     /** Sent as the version when not run from a built JAR. */
     static final String UNKNOWN_VERSION = "unknown";
+    /** The reason given when the endpoint, application name or version could not build a client. */
+    static final String INVALID_CONFIGURATION = "invalid usage-reporting configuration";
 
     private final TraceClient client;
+    private final boolean invalidConfiguration;
     private final Path noticeMarker;
 
     @Autowired
@@ -63,8 +66,18 @@ public class UsageReporter {
     }
 
     UsageReporter(String enabled, String endpoint, String key, String version, Path noticeMarker) {
-        this.client = buildClient(enabled, endpoint, key,
-                version == null || version.isBlank() ? UNKNOWN_VERSION : version, installIdFile(noticeMarker));
+        TraceClient built;
+        boolean invalid = false;
+        try {
+            built = buildClient(enabled, endpoint, key,
+                    version == null || version.isBlank() ? UNKNOWN_VERSION : version, installIdFile(noticeMarker));
+        } catch (RuntimeException badConfiguration) {
+            log.debug("Usage reporting disabled: {}", badConfiguration.getMessage());
+            built = TraceClient.disabled();
+            invalid = true;
+        }
+        this.client = built;
+        this.invalidConfiguration = invalid;
         this.noticeMarker = noticeMarker;
     }
 
@@ -80,20 +93,15 @@ public class UsageReporter {
                                            File installIdFile) {
         // A blank value (an empty environment variable, say) means "default", i.e. on.
         boolean on = enabled == null || enabled.isBlank() || !"false".equalsIgnoreCase(enabled.trim());
-        try {
-            // The program's own switch goes to the builder rather than short-circuiting here, so
-            // the client applies its precedence (environment first).
-            return TraceClient.builder(endpoint, APPLICATION, version)
-                    .key(key)
-                    .enabled(on)
-                    .installId(TraceInstallId.fromEnvironment())
-                    .installIdFile(installIdFile)
-                    .logger(java.util.logging.Logger.getLogger(UsageReporter.class.getName()))
-                    .build();
-        } catch (RuntimeException badConfiguration) {
-            log.debug("Usage reporting disabled: {}", badConfiguration.getMessage());
-            return TraceClient.disabled();
-        }
+        // The program's own switch goes to the builder rather than short-circuiting here, so
+        // the client applies its precedence (environment first).
+        return TraceClient.builder(endpoint, APPLICATION, version)
+                .key(key)
+                .enabled(on)
+                .installId(TraceInstallId.fromEnvironment())
+                .installIdFile(installIdFile)
+                .logger(java.util.logging.Logger.getLogger(UsageReporter.class.getName()))
+                .build();
     }
 
     /** {@code ~/.config/parpt/usage-reporting-notice-shown}; null if there is no usable home. */
@@ -120,7 +128,11 @@ public class UsageReporter {
     /** Why nothing is sent, in Parpt's terms, or null while reporting is on. */
     public String disabledReason() {
         String reason = client.disabledReason();
-        return TraceClient.REASON_CONFIG.equals(reason) ? "usage-reporting.enabled" : reason;
+        if (!TraceClient.REASON_CONFIG.equals(reason)) {
+            return reason;
+        }
+        // The stand-in client is switched off in code, so the switch is not what to blame.
+        return invalidConfiguration ? INVALID_CONFIGURATION : "usage-reporting.enabled";
     }
 
     @PostConstruct
