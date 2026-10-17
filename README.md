@@ -34,10 +34,17 @@ cd Parpt
 The build writes two jars to `build/libs/`: the runnable `Parpt-<version>.jar` and a `Parpt-<version>-plain.jar` that cannot be run on its own. Use the one without `-plain` (`<version>` is the `version` set in `build.gradle`). A bare `build/libs/Parpt-*.jar` glob matches both, and the shell may pass the plain jar first, in which case Java fails with `no main manifest attribute`.
 
 ## Getting Started
-Run the CLI from the directory where your data should live:
+Run the CLI:
 ```bash
 java -jar build/libs/Parpt-<version>.jar
 ```
+
+Projects are saved to `~/.parpt/projects.json` (the `.parpt` directory is created on first save), so the same projects are found whichever directory Parpt is started from. To keep them somewhere else, pass the path at startup:
+```bash
+java -Dapp.projects.file=/path/to/projects.json -jar build/libs/Parpt-<version>.jar
+```
+
+Earlier versions saved `projects.json` in the directory Parpt was started from, and that file is not picked up automatically. To keep using it, move it to `~/.parpt/projects.json` or point `app.projects.file` at it.
 
 Available commands:
 - `create` - Create a new project with guided scoring, or straight from options
@@ -54,8 +61,8 @@ You'll be prompted to enter:
 - Entering `q` or `quit` at any prompt (or pressing Ctrl-D) cancels creation without saving anything
 - Parpt will then:
     - Calculate ICE and RICE scores
-    - Save the results to `projects.json` in the directory Parpt was started from
-    - Allow you to export to `projects.md` (in the same directory) sorted by priority
+    - Save the results to `~/.parpt/projects.json`
+    - Allow you to export to `projects.md` in the directory Parpt was started from, sorted by priority
     - Help you sort and review your efforts over time
 
 ### Create Examples
