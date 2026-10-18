@@ -33,6 +33,14 @@ cd Parpt
 
 The build writes two jars to `build/libs/`: the runnable `Parpt-<version>.jar` and a `Parpt-<version>-plain.jar` that cannot be run on its own. Use the one without `-plain` (`<version>` is the `version` set in `build.gradle`). A bare `build/libs/Parpt-*.jar` glob matches both, and the shell may pass the plain jar first, in which case Java fails with `no main manifest attribute`.
 
+### Installing on Linux
+To start Parpt by typing `parpt` from any directory, run the install script from the cloned repository (requires JDK 21 on `PATH`):
+```bash
+./install.sh
+```
+
+It builds the runnable jar, copies it to `~/.local/share/parpt/parpt.jar` and writes a `parpt` launcher to `~/.local/bin`. If `~/.local/bin` is not on your `PATH`, the script prints the line to add to your shell profile. Set `PARPT_INSTALL_DIR` or `PARPT_BIN_DIR` to install somewhere else. Run the script again after pulling to install the newer version; delete those two files to uninstall. Projects are saved to `~/.parpt/projects.json` either way, as described below.
+
 ## Getting Started
 Run the CLI:
 ```bash
