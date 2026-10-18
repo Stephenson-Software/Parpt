@@ -11,7 +11,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -75,6 +78,20 @@ class InstallScriptTest {
         assertEquals(0, result.exitCode, result.output);
         assertTrue(result.output.contains(binDir + " is not on your PATH."), result.output);
         assertTrue(result.output.contains("export PATH=\"" + binDir + ":$PATH\""), result.output);
+    }
+
+    @Test
+    void installsTheJarJustBuiltRatherThanAnOlderOneLeftInBuildLibs() throws Exception {
+        stubGradlew(true);
+        Path stale = sourceDir.resolve("build/libs/Parpt-9.0.jar");
+        Files.createDirectories(stale.getParent());
+        Files.writeString(stale, "stale");
+        Files.setLastModifiedTime(stale, FileTime.from(Instant.now().minus(1, ChronoUnit.DAYS)));
+
+        Result result = runInstall(Map.of());
+
+        assertEquals(0, result.exitCode, result.output);
+        assertEquals("runnable", Files.readString(home.resolve(".local/share/parpt/parpt.jar")));
     }
 
     @Test

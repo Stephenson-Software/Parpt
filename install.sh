@@ -20,15 +20,10 @@ fi
 echo "Building Parpt..."
 "$SOURCE_DIR/gradlew" -p "$SOURCE_DIR" bootJar
 
-# bootJar writes only the runnable jar, but a plain jar left by an earlier `./gradlew build`
-# may sit beside it and cannot be run on its own.
-JAR=""
-for candidate in "$SOURCE_DIR"/build/libs/Parpt-*.jar; do
-    case "$candidate" in
-        *-plain.jar) ;;
-        *) [ -f "$candidate" ] && JAR="$candidate" ;;
-    esac
-done
+# bootJar does not clean build/libs: a plain jar left by an earlier `./gradlew build` cannot be
+# run on its own, and a runnable jar from an older version may remain, so take the newest
+# runnable jar rather than whichever sorts last.
+JAR=$(ls -t "$SOURCE_DIR"/build/libs/Parpt-*.jar 2>/dev/null | grep -v -- '-plain\.jar$' | head -n 1 || true)
 if [ -z "$JAR" ]; then
     echo "No runnable jar was found in $SOURCE_DIR/build/libs after the build." >&2
     exit 1
