@@ -36,4 +36,4 @@ The CI pipeline ensures code quality by:
 Make sure all tests pass locally before submitting a pull request. The CI checks must pass before merging.
 
 ## License
-By contributing, you agree that your contributions will be licensed under the project's [Stephenson Software Non-Commercial License (Stephenson-NC)](https://github.com/Stephenson-Software/stephenson-nc-license), as described in [LICENSE](LICENSE).
+By contributing, you agree that your contributions will be licensed under the project's MIT License, as described in [LICENSE](LICENSE).
