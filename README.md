@@ -23,6 +23,12 @@ Each project is evaluated across 5 dimensions using a detailed 1-5 scoring syste
 - **Reach**: User coverage, new user attraction, visibility, usage frequency
 - **Effort**: Development time, team size, maintenance burden, ongoing work
 
+The two priority scores are calculated from these, and a higher score means a higher priority for both:
+- **ICE** = Impact × Confidence × Ease, from 1 to 125
+- **RICE** = (Reach × Impact × Confidence) ÷ Effort, from 0.2 to 125
+
+Effort is the only dimension where a higher score means more work, so it divides the RICE score instead of multiplying it. ICE does not use Reach or Effort; Ease takes Effort's place there.
+
 ## Installation
 Clone and build manually (requires JDK 21):
 ```bash
@@ -144,6 +150,11 @@ export -s impact
 ```
 
 `export` accepts the same `--sort` values as `list`: `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest, and the chosen order is recorded in the exported file's header. Unlike `list`, `export` always sorts — omitting `--sort` sorts by ICE score.
+
+The export is written to `projects.md` in the directory Parpt was started from, replacing any earlier export there. To write it somewhere else, pass the path at startup; the directory it names must already exist:
+```bash
+java -Dapp.projects.markdown-file=/path/to/projects.md -jar build/libs/Parpt-<version>.jar
+```
 
 ## Roadmap
 - [x] Project input and validation loop
