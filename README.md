@@ -156,6 +156,8 @@ The export is written to `projects.md` in the directory Parpt was started from, 
 java -Dapp.projects.markdown-file=/path/to/projects.md -jar build/libs/Parpt-<version>.jar
 ```
 
+The message `export` prints on success names the file it wrote to, including an overridden path.
+
 ## Roadmap
 - [x] Project input and validation loop
 - [x] Score calculation engine

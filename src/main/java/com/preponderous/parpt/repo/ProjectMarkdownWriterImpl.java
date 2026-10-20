@@ -27,6 +27,11 @@ public class ProjectMarkdownWriterImpl implements ProjectMarkdownWriter {
     }
 
     @Override
+    public String getMarkdownFilePath() {
+        return markdownFilePath;
+    }
+
+    @Override
     public void writeMarkdown(List<Project> projects, String sortKey) {
         if (projects == null) {
             throw new IllegalArgumentException("Projects list cannot be null");
