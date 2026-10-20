@@ -161,6 +161,11 @@ class ProjectMarkdownWriterImplTest {
     }
 
     @Test
+    void getMarkdownFilePath_ShouldReturnTheConfiguredPath() {
+        assertEquals(tempMarkdownFile.toString(), markdownWriter.getMarkdownFilePath());
+    }
+
+    @Test
     void writeMarkdown_ShouldUseCorrectRankingForMultipleProjects() throws IOException {
         // Given
         Project project1 = Project.builder().name("First").build();

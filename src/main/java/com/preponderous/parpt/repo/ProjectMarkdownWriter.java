@@ -29,4 +29,11 @@ public interface ProjectMarkdownWriter {
     default void writeMarkdown(List<Project> projects) {
         writeMarkdown(projects, ProjectSorter.DEFAULT_SORT_KEY);
     }
+
+    /**
+     * Returns the path of the file the Markdown export is written to.
+     *
+     * @return the configured Markdown file path
+     */
+    String getMarkdownFilePath();
 }

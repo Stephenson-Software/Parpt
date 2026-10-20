@@ -38,8 +38,8 @@ public class ExportProjectsCommand {
 
         try {
             markdownWriter.writeMarkdown(projects, sortBy);
-            return String.format("Successfully exported %d projects to projects.md, sorted by %s.",
-                    projects.size(), ProjectSorter.describeSortKey(sortBy));
+            return String.format("Successfully exported %d projects to %s, sorted by %s.",
+                    projects.size(), markdownWriter.getMarkdownFilePath(), ProjectSorter.describeSortKey(sortBy));
         } catch (Exception e) {
             return "Failed to export projects: " + e.getMessage();
         }

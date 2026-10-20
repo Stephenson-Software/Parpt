@@ -55,6 +55,23 @@ class ExportProjectsCommandTest {
     }
 
     @Test
+    void execute_WithOverriddenMarkdownFile_ShouldNameTheConfiguredPathInTheSuccessMessage() {
+        // Given
+        List<Project> projects = List.of(
+                Project.builder().name("Project 1").description("Desc 1").build()
+        );
+        when(projectService.getProjects()).thenReturn(projects);
+        when(markdownWriter.getMarkdownFilePath()).thenReturn("/tmp/exports/priorities.md");
+
+        // When
+        String result = exportCommand.execute("ice");
+
+        // Then
+        assertEquals("Successfully exported 1 projects to /tmp/exports/priorities.md, sorted by ICE score.", result);
+        assertFalse(result.contains("projects.md"));
+    }
+
+    @Test
     void execute_WithRiceSort_ShouldExportWithRICE() {
         // Given
         List<Project> projects = List.of(
