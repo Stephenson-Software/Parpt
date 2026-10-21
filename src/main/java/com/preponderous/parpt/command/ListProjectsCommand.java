@@ -53,7 +53,7 @@ public class ListProjectsCommand {
                 ? String.format("Projects (sorted by %s):\n", sortBy.toLowerCase(Locale.ROOT))
                 : "Projects:\n");
         for (Project project : projects) {
-            result.append(String.format("- %s: %s (ICE: %s | RICE: %s)\n", project.getName(), project.getDescription(), scoreCalculator.ice(project), scoreCalculator.rice(project)));
+            result.append(String.format("- %s: %s (ICE: %.2f | RICE: %.2f)\n", project.getName(), project.getDescription(), scoreCalculator.ice(project), scoreCalculator.rice(project)));
         }
 
         return result.toString();
