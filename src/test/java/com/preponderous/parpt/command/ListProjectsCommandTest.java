@@ -70,6 +70,18 @@ class ListProjectsCommandTest {
     }
 
     @Test
+    void shouldRoundIceAndRiceScoresToTwoDecimals() throws ProjectRepository.NameTakenException {
+        // Given a project whose RICE score is not a whole number (2 * 4 * 2 / 3)
+        projectService.createProject("Fractional", "Repeating RICE", 4, 2, 5, 2, 3);
+
+        // When the command is executed
+        var result = listProjectsCommand.execute(ListProjectsCommand.SORT_NONE);
+
+        // Then both scores are printed with two decimals, as view and export print them
+        assertTrue(result.contains("- Fractional: Repeating RICE (ICE: 40.00 | RICE: 5.33)"));
+    }
+
+    @Test
     void shouldPreserveCreationOrderWhenNoSortOptionIsGiven() throws ProjectRepository.NameTakenException {
         // Given projects are created out of alphabetical and score order
         projectService.createProject("Zebra", "Created first", 1, 1, 1, 1, 1);
