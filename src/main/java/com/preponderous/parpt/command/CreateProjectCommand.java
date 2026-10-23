@@ -103,7 +103,7 @@ public class CreateProjectCommand {
             if (projectName == null) {
                 projectName = readInput(promptProperties.getProjectName());
             }
-            if (projectName.isEmpty()) {
+            if (projectName.isBlank()) {
                 return "Project name cannot be empty.";
             }
             if (projectService.isNameTaken(projectName)) {
@@ -112,7 +112,7 @@ public class CreateProjectCommand {
             if (projectDescription == null) {
                 projectDescription = readInput(promptProperties.getProjectDescription());
             }
-            if (projectDescription.isEmpty()) {
+            if (projectDescription.isBlank()) {
                 return "Project description cannot be empty.";
             }
             if (impact == null) {

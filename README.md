@@ -92,7 +92,7 @@ create -n "My Project" -d "A short pitch" -i 4 -c 3 -e 5 -r 2 -f 3
 create --name "My Project" --impact 4
 ```
 
-Scores given as options are used as they are rather than averaged; a score outside 1-5 is rejected with `All scores must be between 1 and 5.` and nothing is saved. A name already in use is rejected before any further question is asked.
+Scores given as options are used as they are rather than averaged; a score outside 1-5 is rejected with `All scores must be between 1 and 5.` and nothing is saved. A name already in use is rejected before any further question is asked, and an empty or whitespace-only name or description stops creation without saving anything.
 
 ### List Examples
 ```bash
@@ -123,7 +123,7 @@ update "My Project" --impact 5 --effort 2
 update "My Project" -c 4 -r 3
 ```
 
-`update` accepts `--description` (`-d`), `--impact` (`-i`), `--confidence` (`-c`), `--ease` (`-e`), `--reach` (`-r`) and `--effort` (`-f`), and at least one of them must be given. The change is saved to `projects.json` immediately and the project keeps its place in creation order; the new ICE and RICE scores are printed. If no project has the given name, `update` reports `Project not found: <project-name>`; an empty description or a score outside 1-5 is rejected and nothing is changed. A project cannot be renamed with `update`.
+`update` accepts `--description` (`-d`), `--impact` (`-i`), `--confidence` (`-c`), `--ease` (`-e`), `--reach` (`-r`) and `--effort` (`-f`), and at least one of them must be given. The change is saved to `projects.json` immediately and the project keeps its place in creation order; the new ICE and RICE scores are printed. If no project has the given name, `update` reports `Project not found: <project-name>`; an empty or whitespace-only description, or a score outside 1-5, is rejected and nothing is changed. A project cannot be renamed with `update`.
 
 ### Delete Examples
 ```bash
