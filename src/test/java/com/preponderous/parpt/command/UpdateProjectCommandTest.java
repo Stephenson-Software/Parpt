@@ -131,6 +131,19 @@ class UpdateProjectCommandTest {
     }
 
     @Test
+    void shouldRejectWhitespaceOnlyDescription() throws Exception {
+        // Given a project exists
+        projectService.createProject("Test Project", "Original description", 1, 2, 3, 4, 5);
+
+        // When the command is executed with a description made only of whitespace
+        var result = updateProjectCommand.execute("Test Project", "   ", null, null, null, null, null);
+
+        // Then the update should be rejected and the description kept
+        assertEquals("Project description cannot be empty.", result);
+        assertEquals("Original description", projectService.getProject("Test Project").getDescription());
+    }
+
+    @Test
     void shouldRejectOutOfRangeScoresWithoutChangingAnything() throws Exception {
         // Given a project exists
         projectService.createProject("Test Project", "Original description", 1, 2, 3, 4, 5);

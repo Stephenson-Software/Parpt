@@ -180,6 +180,33 @@ class CreateProjectCommandTest {
     }
 
     @Test
+    void testWhitespaceOnlyNameAtPromptIsRejected() {
+        when(inputProvider.readLine(promptProperties.getProjectName())).thenReturn("   ");
+
+        String result = command.execute(null, null, null, null, null, null, null);
+
+        assertEquals("Project name cannot be empty.", result);
+        verify(inputProvider, never()).readLine(promptProperties.getProjectDescription());
+        assertFalse(projectService.isNameTaken("   "));
+    }
+
+    @Test
+    void testWhitespaceOnlyDescriptionOptionIsRejected() {
+        String result = command.execute(
+                "Blank Description Project",
+                " \t ",
+                5,
+                5,
+                5,
+                5,
+                5
+        );
+
+        assertEquals("Project description cannot be empty.", result);
+        assertFalse(projectService.isNameTaken("Blank Description Project"));
+    }
+
+    @Test
     void testInteractiveInputWithPartialArgumentsProvided() {
         // Setup mock responses for missing fields
         when(inputProvider.readLine(promptProperties.getProjectDescription()))

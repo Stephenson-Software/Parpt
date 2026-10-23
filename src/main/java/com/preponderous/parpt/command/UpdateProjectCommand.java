@@ -35,7 +35,7 @@ public class UpdateProjectCommand {
         if (description == null && Stream.of(impact, confidence, ease, reach, effort).allMatch(score -> score == null)) {
             return "Nothing to update. Provide at least one of --description, --impact, --confidence, --ease, --reach or --effort.";
         }
-        if (description != null && description.isEmpty()) {
+        if (description != null && description.isBlank()) {
             return "Project description cannot be empty.";
         }
         if (!InputValidator.areValidScores(impact, confidence, ease, reach, effort)) {
