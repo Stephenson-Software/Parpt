@@ -2,6 +2,7 @@ package com.preponderous.parpt.integration;
 
 import com.preponderous.parpt.domain.Project;
 import com.preponderous.parpt.repo.ProjectMarkdownWriter;
+import com.preponderous.parpt.repo.ProjectRepository;
 import com.preponderous.parpt.score.ScoreCalculator;
 import com.preponderous.parpt.service.ProjectService;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,9 @@ class MarkdownExportIntegrationTest {
     private ProjectService projectService;
 
     @Autowired
+    private ProjectRepository projectRepository;
+
+    @Autowired
     private ProjectMarkdownWriter markdownWriter;
 
     @Autowired
@@ -34,8 +38,9 @@ class MarkdownExportIntegrationTest {
 
     @Test
     void endToEndMarkdownExport_ShouldCreateReadableMarkdownFile() throws Exception {
-        // Clean up any existing files
-        Files.deleteIfExists(Paths.get("integration-test-projects.json"));
+        // Clean up any existing projects and files; the repository has already loaded the JSON
+        // file into memory, so deleting the file alone would not remove leftover projects
+        projectRepository.clear();
         Files.deleteIfExists(Paths.get("integration-test-projects.md"));
 
         // Create test projects with different scores

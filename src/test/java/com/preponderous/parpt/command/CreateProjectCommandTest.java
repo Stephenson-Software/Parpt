@@ -1,6 +1,7 @@
 package com.preponderous.parpt.command;
 
 import com.preponderous.parpt.config.PromptProperties;
+import com.preponderous.parpt.repo.ProjectRepository;
 import com.preponderous.parpt.score.ScoreCalculator;
 import com.preponderous.parpt.service.ProjectService;
 import com.preponderous.parpt.util.ConsoleInputProvider;
@@ -21,6 +22,9 @@ class CreateProjectCommandTest {
     @Autowired
     ProjectService projectService;
 
+    @Autowired
+    ProjectRepository projectRepository;
+
     @Mock
     ConsoleInputProvider inputProvider;
 
@@ -35,6 +39,9 @@ class CreateProjectCommandTest {
     @BeforeEach
     void setUp() {
         command = new CreateProjectCommand(projectService, inputProvider, scoreCalculator, promptProperties);
+
+        // Clear any existing projects in the repository before each test
+        projectRepository.clear();
     }
 
     @Test
