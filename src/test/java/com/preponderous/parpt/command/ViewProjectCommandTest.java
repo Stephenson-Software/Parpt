@@ -1,5 +1,6 @@
 package com.preponderous.parpt.command;
 
+import com.preponderous.parpt.export.ScoreDescriptionProvider;
 import com.preponderous.parpt.repo.ProjectRepository;
 import com.preponderous.parpt.score.ScoreCalculator;
 import com.preponderous.parpt.service.ProjectService;
@@ -24,10 +25,13 @@ class ViewProjectCommandTest {
     @Autowired
     ScoreCalculator scoreCalculator;
 
+    @Autowired
+    ScoreDescriptionProvider scoreDescriptionProvider;
+
     @BeforeEach
     void setUp() {
         // Initialize the command with the project service
-        viewProjectCommand = new ViewProjectCommand(projectService, scoreCalculator);
+        viewProjectCommand = new ViewProjectCommand(projectService, scoreCalculator, scoreDescriptionProvider);
 
         // Clear any existing projects in the repository before each test
         projectRepository.clear();
@@ -60,7 +64,20 @@ class ViewProjectCommandTest {
         assertTrue(result.contains("Ease: medium"));
         assertTrue(result.contains("Reach: low"));
         assertTrue(result.contains("Effort: very low"));
-        assertTrue(result.contains("ICE Score"));
-        assertTrue(result.contains("RICE Score"));
+        assertTrue(result.contains("ICE Score: 60.00\n"));
+        assertTrue(result.contains("RICE Score: 40.00\n"));
+    }
+
+    @Test
+    void shouldShowRawNumberForScoreOutsideOneToFive() throws ProjectRepository.NameTakenException {
+        // Given a project whose impact is outside the 1-5 range, as a hand-edited projects.json could hold
+        projectService.createProject("Out Of Range", "Impact beyond the scale", 7, 4, 3, 2, 1);
+
+        // When the command is executed
+        var result = viewProjectCommand.execute("Out Of Range");
+
+        // Then the impact is shown as its raw number rather than a description
+        assertTrue(result.contains("Impact: 7\n"));
+        assertTrue(result.contains("Confidence: high\n"));
     }
 }
