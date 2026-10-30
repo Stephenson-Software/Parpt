@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -142,6 +144,89 @@ class ProjectJsonReaderWriterImplTest {
                 .hasSize(1)
                 .usingRecursiveComparison()
                 .isEqualTo(List.of(project1));
+    }
+
+    @Test
+    void readJson_WhenFileDoesNotExist_ShouldReturnEmptyListWithoutCreatingIt() {
+        // Arrange
+        Path projectsFile = tempDir.resolve("missing.json");
+        ProjectJsonReaderWriterImpl missingFileReaderWriter =
+                new ProjectJsonReaderWriterImpl(projectsFile.toString(), objectMapper);
+
+        // Act
+        List<Project> projects = missingFileReaderWriter.readJson();
+
+        // Assert
+        assertThat(projects)
+                .isNotNull()
+                .isEmpty();
+        assertThat(projectsFile).doesNotExist();
+    }
+
+    @Test
+    void readJson_WhenFileIsEmpty_ShouldReturnEmptyList() throws IOException {
+        // Arrange
+        Path projectsFile = Files.createFile(tempDir.resolve("empty.json"));
+        ProjectJsonReaderWriterImpl emptyFileReaderWriter =
+                new ProjectJsonReaderWriterImpl(projectsFile.toString(), objectMapper);
+
+        // Act
+        List<Project> projects = emptyFileReaderWriter.readJson();
+
+        // Assert
+        assertThat(projects)
+                .isNotNull()
+                .isEmpty();
+    }
+
+    @Test
+    void readJson_WhenFileIsMalformed_ShouldThrowWithCause() throws IOException {
+        // Arrange
+        Path projectsFile = Files.writeString(tempDir.resolve("malformed.json"), "{not valid json");
+        ProjectJsonReaderWriterImpl malformedFileReaderWriter =
+                new ProjectJsonReaderWriterImpl(projectsFile.toString(), objectMapper);
+
+        // Act
+        RuntimeException exception = assertThrows(RuntimeException.class, malformedFileReaderWriter::readJson);
+
+        // Assert
+        assertThat(exception.getMessage()).isEqualTo("Failed to read projects from JSON file");
+        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+    }
+
+    @Test
+    void writeJson_WhenParentPathIsAFile_ShouldThrowNamingTheDirectory() throws IOException {
+        // Arrange
+        Path blockingFile = Files.writeString(tempDir.resolve("not-a-directory"), "occupied");
+        Path projectsFile = blockingFile.resolve("projects.json");
+        ProjectJsonReaderWriterImpl blockedReaderWriter =
+                new ProjectJsonReaderWriterImpl(projectsFile.toString(), objectMapper);
+
+        // Act
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> blockedReaderWriter.writeJson(List.of(project1)));
+
+        // Assert
+        assertThat(exception.getMessage())
+                .isEqualTo("Failed to create directory for projects file: " + blockingFile);
+        assertThat(blockingFile).isRegularFile().hasContent("occupied");
+    }
+
+    @Test
+    void writeJson_WhenFilePathIsADirectory_ShouldThrowWithCause() throws IOException {
+        // Arrange
+        Path projectsDirectory = Files.createDirectory(tempDir.resolve("projects.json"));
+        ProjectJsonReaderWriterImpl directoryReaderWriter =
+                new ProjectJsonReaderWriterImpl(projectsDirectory.toString(), objectMapper);
+
+        // Act
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> directoryReaderWriter.writeJson(List.of(project1)));
+
+        // Assert
+        assertThat(exception.getMessage()).isEqualTo("Failed to write projects to JSON file");
+        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+        assertThat(projectsDirectory).isDirectory();
     }
 
     @Test
