@@ -119,7 +119,7 @@ Supported `--sort` values are `name`, `impact`, `confidence`, `ease`, `reach`, `
 view "My Project"
 ```
 
-For the project from the create examples above, `view` prints:
+For the project made by the create examples' option-only command (`-i 4 -c 3 -e 5 -r 2 -f 3`), `view` prints:
 ```text
 Project: My Project
 Description: A short pitch
