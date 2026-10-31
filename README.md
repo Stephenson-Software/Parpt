@@ -113,6 +113,27 @@ list -s impact
 
 Supported `--sort` values are `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest; omitting `--sort` keeps the order in which projects were created.
 
+### View Examples
+```bash
+# View a project by name
+view "My Project"
+```
+
+For the project from the create examples above, `view` prints:
+```text
+Project: My Project
+Description: A short pitch
+Impact: high
+Confidence: medium
+Ease: very high
+Reach: low
+Effort: medium
+ICE Score: 60.00
+RICE Score: 8.00
+```
+
+Each score is shown as a word rather than a number: 1 is `very low`, 2 `low`, 3 `medium`, 4 `high` and 5 `very high`. A score outside 1-5, as a hand-edited `projects.json` could hold, is shown as its number. The ICE and RICE scores are shown to two decimal places. If no project has the given name, `view` reports `Project not found: <project-name>`.
+
 ### Update Examples
 ```bash
 # Change a project's description
