@@ -8,7 +8,7 @@ import java.util.List;
 
 @Repository
 public class ProjectRepository {
-    private final List<Project> projects;
+    private List<Project> projects;
     private final ProjectJsonReaderWriter projectJsonReaderWriter;
 
     public ProjectRepository(ProjectJsonReaderWriter projectJsonReaderWriter) {
@@ -21,22 +21,23 @@ public class ProjectRepository {
     }
 
     public void clear() {
-        projects.clear();
-        projectJsonReaderWriter.writeJson(projects);
+        save(new ArrayList<>());
     }
 
     public void add(Project project) throws NameTakenException {
         if (projects.stream().anyMatch(p -> p.getName().equals(project.getName()))) {
             throw new NameTakenException("Project with the same name already exists");
         }
-        projects.add(project);
-        projectJsonReaderWriter.writeJson(projects);
+        List<Project> changed = new ArrayList<>(projects);
+        changed.add(project);
+        save(changed);
     }
 
     public void remove(String projectName) throws ProjectNotFoundException {
         Project project = findByName(projectName);
-        projects.remove(project);
-        projectJsonReaderWriter.writeJson(projects);
+        List<Project> changed = new ArrayList<>(projects);
+        changed.remove(project);
+        save(changed);
     }
 
     /**
@@ -45,8 +46,9 @@ public class ProjectRepository {
      */
     public void update(Project project) throws ProjectNotFoundException {
         int index = projects.indexOf(findByName(project.getName()));
-        projects.set(index, project);
-        projectJsonReaderWriter.writeJson(projects);
+        List<Project> changed = new ArrayList<>(projects);
+        changed.set(index, project);
+        save(changed);
     }
 
     public Project findByName(String projectName) throws ProjectNotFoundException {
@@ -58,6 +60,15 @@ public class ProjectRepository {
             throw new ProjectNotFoundException("Project not found: " + projectName);
         }
         return retrievedProject;
+    }
+
+    /**
+     * Writes the changed list and only then adopts it, so a failed write leaves the projects in
+     * memory matching the file and the operation can be retried.
+     */
+    private void save(List<Project> changed) {
+        projectJsonReaderWriter.writeJson(changed);
+        projects = changed;
     }
 
     public static class NameTakenException extends Exception {

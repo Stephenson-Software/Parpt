@@ -138,6 +138,49 @@ class ProjectRepositoryTest {
     }
 
     @Test
+    void add_WhenWriteFails_ShouldLeaveStateUnchangedSoItCanBeRetried() throws Exception {
+        doThrow(new RuntimeException("disk full")).when(projectJsonReaderWriter).writeJson(anyList());
+
+        assertThrows(RuntimeException.class, () -> repository.add(beta));
+
+        assertThat(repository.findAll()).containsExactly(alpha);
+
+        doNothing().when(projectJsonReaderWriter).writeJson(anyList());
+        repository.add(beta);
+
+        assertThat(repository.findAll()).containsExactly(alpha, beta);
+    }
+
+    @Test
+    void remove_WhenWriteFails_ShouldLeaveStateUnchanged() {
+        doThrow(new RuntimeException("disk full")).when(projectJsonReaderWriter).writeJson(anyList());
+
+        assertThrows(RuntimeException.class, () -> repository.remove("Alpha"));
+
+        assertThat(repository.findAll()).containsExactly(alpha);
+    }
+
+    @Test
+    void update_WhenWriteFails_ShouldLeaveStateUnchanged() throws Exception {
+        Project changedAlpha = Project.builder().name("Alpha").description("Changed").impact(5).confidence(5).ease(5).reach(5).effort(5).build();
+        doThrow(new RuntimeException("disk full")).when(projectJsonReaderWriter).writeJson(anyList());
+
+        assertThrows(RuntimeException.class, () -> repository.update(changedAlpha));
+
+        assertThat(repository.findAll()).containsExactly(alpha);
+        assertThat(repository.findByName("Alpha")).isSameAs(alpha);
+    }
+
+    @Test
+    void clear_WhenWriteFails_ShouldLeaveStateUnchanged() {
+        doThrow(new RuntimeException("disk full")).when(projectJsonReaderWriter).writeJson(anyList());
+
+        assertThrows(RuntimeException.class, () -> repository.clear());
+
+        assertThat(repository.findAll()).containsExactly(alpha);
+    }
+
+    @Test
     void findByName_ShouldReturnMatchingProject() throws Exception {
         assertThat(repository.findByName("Alpha")).isSameAs(alpha);
     }
