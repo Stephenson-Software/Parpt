@@ -92,6 +92,12 @@ public class CreateProjectCommand {
             @ShellOption(value = {"-r", "--reach"}, help = "Reach score (1-5)", defaultValue = ShellOption.NULL) Integer reach,
             @ShellOption(value = {"-f", "--effort"}, help = "Effort score (1-5)", defaultValue = ShellOption.NULL) Integer effort
     ) {
+        // Only scores given as options can be out of range, because promptForScore re-asks until
+        // its answers are valid, so this rejects a bad option before any question is asked
+        if (!InputValidator.areValidScores(impact, confidence, ease, reach, effort)) {
+            return "All scores must be between 1 and 5.";
+        }
+
         boolean interactive = projectName == null || projectDescription == null || impact == null
                 || confidence == null || ease == null || reach == null || effort == null;
         if (interactive) {
@@ -132,10 +138,6 @@ public class CreateProjectCommand {
             }
         } catch (CreationCancelledException e) {
             return CANCELLED_MESSAGE;
-        }
-
-        if (!InputValidator.areValidScores(impact, confidence, ease, reach, effort)) {
-            return "All scores must be between 1 and 5.";
         }
 
         // Create the project using the service

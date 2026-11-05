@@ -81,6 +81,18 @@ class CreateProjectCommandTest {
     }
 
     @Test
+    void testOutOfRangeScoreOptionIsRejectedBeforeAnyQuestion() {
+        String output = captureStandardOutput(() -> assertEquals(
+                "All scores must be between 1 and 5.",
+                command.execute("Early Rejection Project", null, 9, null, null, null, null)));
+
+        // Neither a prompt nor the hint about cancelling a prompt is shown
+        verifyNoInteractions(inputProvider);
+        assertFalse(output.contains("Enter 'q' at any prompt"));
+        assertFalse(projectService.isNameTaken("Early Rejection Project"));
+    }
+
+    @Test
     void testInteractiveInputWithAllFieldsMissing() {
         // Setup mock responses with test prompts from application.yaml
         when(inputProvider.readLine(promptProperties.getProjectName())).thenReturn("Interactive Project");

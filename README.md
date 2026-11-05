@@ -92,7 +92,7 @@ create -n "My Project" -d "A short pitch" -i 4 -c 3 -e 5 -r 2 -f 3
 create --name "My Project" --impact 4
 ```
 
-Scores given as options are used as they are rather than averaged; a score outside 1-5 is rejected with `All scores must be between 1 and 5.` and nothing is saved. A name already in use is rejected before any further question is asked, and an empty or whitespace-only name or description stops creation without saving anything.
+Scores given as options are used as they are rather than averaged; a score outside 1-5 is rejected with `All scores must be between 1 and 5.` before any question is asked, and nothing is saved. A name already in use is rejected before any further question is asked, and an empty or whitespace-only name or description stops creation without saving anything.
 
 ### List Examples
 ```bash
