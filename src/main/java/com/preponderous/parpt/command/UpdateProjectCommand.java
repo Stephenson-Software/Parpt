@@ -47,6 +47,8 @@ public class UpdateProjectCommand {
             project = projectService.updateProject(projectName, description, impact, confidence, ease, reach, effort);
         } catch (ProjectRepository.ProjectNotFoundException e) {
             return "Project not found: " + projectName;
+        } catch (Exception e) {
+            return "An error occurred while updating the project: " + e.getMessage();
         }
 
         double iceScore = scoreCalculator.ice(project);

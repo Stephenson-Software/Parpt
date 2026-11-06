@@ -144,7 +144,7 @@ update "My Project" --impact 5 --effort 2
 update "My Project" -c 4 -r 3
 ```
 
-`update` accepts `--description` (`-d`), `--impact` (`-i`), `--confidence` (`-c`), `--ease` (`-e`), `--reach` (`-r`) and `--effort` (`-f`), and at least one of them must be given. The change is saved to `projects.json` immediately and the project keeps its place in creation order; the new ICE and RICE scores are printed. If no project has the given name, `update` reports `Project not found: <project-name>`; an empty or whitespace-only description, or a score outside 1-5, is rejected and nothing is changed. A project cannot be renamed with `update`.
+`update` accepts `--description` (`-d`), `--impact` (`-i`), `--confidence` (`-c`), `--ease` (`-e`), `--reach` (`-r`) and `--effort` (`-f`), and at least one of them must be given. The change is saved to `projects.json` immediately and the project keeps its place in creation order; the new ICE and RICE scores are printed. If no project has the given name, `update` reports `Project not found: <project-name>`; an empty or whitespace-only description, or a score outside 1-5, is rejected and nothing is changed. If `projects.json` cannot be written, `update` reports `An error occurred while updating the project: <reason>` and nothing is changed. A project cannot be renamed with `update`.
 
 ### Delete Examples
 ```bash
@@ -155,7 +155,7 @@ delete "My Project"
 rm "My Project"
 ```
 
-Deleting a project removes it from `projects.json` immediately; there is no confirmation prompt and no undo. If no project has the given name, `delete` reports `Project not found: <project-name>` and nothing is changed.
+Deleting a project removes it from `projects.json` immediately; there is no confirmation prompt and no undo. If no project has the given name, `delete` reports `Project not found: <project-name>` and nothing is changed. If `projects.json` cannot be written, `delete` reports `An error occurred while deleting the project: <reason>` and the project is kept.
 
 ### Export Examples
 ```bash

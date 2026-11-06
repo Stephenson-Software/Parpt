@@ -20,6 +20,8 @@ public class DeleteProjectCommand {
             projectService.deleteProject(projectName);
         } catch (ProjectRepository.ProjectNotFoundException e) {
             return "Project not found: " + projectName;
+        } catch (Exception e) {
+            return "An error occurred while deleting the project: " + e.getMessage();
         }
 
         return "Project deleted: " + projectName;

@@ -4,16 +4,22 @@ import com.preponderous.parpt.domain.Project;
 import com.preponderous.parpt.repo.ProjectJsonReaderWriter;
 import com.preponderous.parpt.repo.ProjectRepository;
 import com.preponderous.parpt.service.ProjectService;
+import com.preponderous.parpt.trace.UsageReporter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class DeleteProjectCommandTest {
@@ -102,5 +108,30 @@ class DeleteProjectCommandTest {
 
         // Then the result should indicate that the project was not found
         assertEquals("Project not found: Once Only", result);
+    }
+
+    @Test
+    void shouldReportFailedSaveWithoutRemovingProject() {
+        // Given a project exists and every save fails
+        ProjectJsonReaderWriter failingWriter = mock(ProjectJsonReaderWriter.class);
+        when(failingWriter.readJson()).thenReturn(new ArrayList<>(List.of(Project.builder()
+                .name("Test Project")
+                .description("This project stays")
+                .impact(5)
+                .confidence(4)
+                .ease(3)
+                .reach(2)
+                .effort(1)
+                .build())));
+        doThrow(new RuntimeException("Failed to write projects to JSON file")).when(failingWriter).writeJson(anyList());
+        ProjectService failingService = new ProjectService(new ProjectRepository(failingWriter), mock(UsageReporter.class));
+        DeleteProjectCommand command = new DeleteProjectCommand(failingService);
+
+        // When the project is deleted
+        var result = command.execute("Test Project");
+
+        // Then the failure should be reported and the project should remain
+        assertEquals("An error occurred while deleting the project: Failed to write projects to JSON file", result);
+        assertTrue(failingService.isNameTaken("Test Project"));
     }
 }
