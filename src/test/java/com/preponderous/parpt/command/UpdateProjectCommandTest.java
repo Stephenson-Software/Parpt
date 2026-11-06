@@ -5,14 +5,20 @@ import com.preponderous.parpt.repo.ProjectJsonReaderWriter;
 import com.preponderous.parpt.repo.ProjectRepository;
 import com.preponderous.parpt.score.ScoreCalculator;
 import com.preponderous.parpt.service.ProjectService;
+import com.preponderous.parpt.trace.UsageReporter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class UpdateProjectCommandTest {
@@ -159,5 +165,32 @@ class UpdateProjectCommandTest {
         assertEquals(1, project.getImpact());
         assertEquals(2, project.getConfidence());
         assertEquals(5, project.getEffort());
+    }
+
+    @Test
+    void shouldReportFailedSaveWithoutChangingProject() throws Exception {
+        // Given a project exists and every save fails
+        ProjectJsonReaderWriter failingWriter = mock(ProjectJsonReaderWriter.class);
+        when(failingWriter.readJson()).thenReturn(new ArrayList<>(List.of(Project.builder()
+                .name("Test Project")
+                .description("Original description")
+                .impact(1)
+                .confidence(2)
+                .ease(3)
+                .reach(4)
+                .effort(5)
+                .build())));
+        doThrow(new RuntimeException("Failed to write projects to JSON file")).when(failingWriter).writeJson(anyList());
+        ProjectService failingService = new ProjectService(new ProjectRepository(failingWriter), mock(UsageReporter.class));
+        UpdateProjectCommand command = new UpdateProjectCommand(failingService, scoreCalculator);
+
+        // When the project is updated
+        var result = command.execute("Test Project", "Updated description", 5, null, null, null, null);
+
+        // Then the failure should be reported and the project should keep its values
+        assertEquals("An error occurred while updating the project: Failed to write projects to JSON file", result);
+        Project project = failingService.getProject("Test Project");
+        assertEquals("Original description", project.getDescription());
+        assertEquals(1, project.getImpact());
     }
 }
