@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,9 +37,9 @@ public class ProjectJsonReaderWriterImpl implements ProjectJsonReaderWriter {
         createParentDirectory(file);
 
         try {
-            objectMapper.writeValue(file, projects);
+            writeAtomically(file, projects);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to write projects to JSON file", e);
+            throw new RuntimeException("Failed to write projects to " + projectsFilePath + ": " + e.getMessage(), e);
         }
     }
 
@@ -52,7 +55,28 @@ public class ProjectJsonReaderWriterImpl implements ProjectJsonReaderWriter {
             return objectMapper.readValue(file,
                     objectMapper.getTypeFactory().constructCollectionType(List.class, Project.class));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read projects from JSON file", e);
+            throw new RuntimeException("Failed to read projects from " + projectsFilePath + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Writes the projects to a temporary file beside the projects file and then moves it into
+     * place, because writing to the projects file directly empties it first, and a full disk or a
+     * killed process would then lose every saved project and leave a file that cannot be read.
+     */
+    private void writeAtomically(File file, List<Project> projects) throws IOException {
+        // A symbolic link is written through rather than replaced by the move
+        Path target = file.exists() ? file.toPath().toRealPath() : file.toPath();
+        Path temporaryFile = target.resolveSibling(target.getFileName() + ".tmp");
+        try {
+            if (Files.isRegularFile(target)) {
+                // Starting from a copy keeps the file's permissions once the move replaces it
+                Files.copy(target, temporaryFile, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+            }
+            objectMapper.writeValue(temporaryFile.toFile(), projects);
+            Files.move(temporaryFile, target, StandardCopyOption.ATOMIC_MOVE);
+        } finally {
+            Files.deleteIfExists(temporaryFile);
         }
     }
 
