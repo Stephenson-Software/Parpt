@@ -58,6 +58,8 @@ Projects are saved to `~/.parpt/projects.json` (the `.parpt` directory is create
 java -Dapp.projects.file=/path/to/projects.json -jar build/libs/Parpt-<version>.jar
 ```
 
+Each save is written to `projects.json.tmp` beside `projects.json` and then moved into place, so a save that fails or is interrupted leaves the previous file whole. The directory holding `projects.json` must therefore be writable, not just the file.
+
 Earlier versions saved `projects.json` in the directory Parpt was started from, and that file is not picked up automatically. To keep using it, move it to `~/.parpt/projects.json` or point `app.projects.file` at it.
 
 Available commands:
@@ -177,7 +179,7 @@ The export is written to `projects.md` in the directory Parpt was started from, 
 java -Dapp.projects.markdown-file=/path/to/projects.md -jar build/libs/Parpt-<version>.jar
 ```
 
-The message `export` prints on success names the file it wrote to, including an overridden path.
+The message `export` prints on success names the file it wrote to, including an overridden path. If the file cannot be written, `export` reports `Failed to export projects: Failed to write projects to <path>: <reason>`.
 
 ## Roadmap
 - [x] Project input and validation loop

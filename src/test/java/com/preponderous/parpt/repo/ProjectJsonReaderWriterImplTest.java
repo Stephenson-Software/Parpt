@@ -1,10 +1,16 @@
 
 package com.preponderous.parpt.repo;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.preponderous.parpt.domain.Project;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,8 +19,11 @@ import org.springframework.test.context.TestPropertySource;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -190,7 +199,9 @@ class ProjectJsonReaderWriterImplTest {
         RuntimeException exception = assertThrows(RuntimeException.class, malformedFileReaderWriter::readJson);
 
         // Assert
-        assertThat(exception.getMessage()).isEqualTo("Failed to read projects from JSON file");
+        assertThat(exception.getMessage())
+                .startsWith("Failed to read projects from " + projectsFile + ": ")
+                .contains(exception.getCause().getMessage());
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -224,9 +235,73 @@ class ProjectJsonReaderWriterImplTest {
                 () -> directoryReaderWriter.writeJson(List.of(project1)));
 
         // Assert
-        assertThat(exception.getMessage()).isEqualTo("Failed to write projects to JSON file");
+        assertThat(exception.getMessage())
+                .startsWith("Failed to write projects to " + projectsDirectory + ": ")
+                .contains(exception.getCause().getMessage());
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
         assertThat(projectsDirectory).isDirectory();
+        assertThat(tempDir).isDirectoryNotContaining("glob:**.tmp");
+    }
+
+    @Test
+    void writeJson_WhenWriteFailsPartWay_ShouldLeaveExistingFileIntact() throws IOException {
+        // Arrange
+        Path projectsFile = tempDir.resolve("projects.json");
+        new ProjectJsonReaderWriterImpl(projectsFile.toString(), objectMapper).writeJson(List.of(project1));
+        String savedJson = Files.readString(projectsFile);
+
+        ObjectMapper failingMapper = new ObjectMapper().registerModule(
+                new SimpleModule().addSerializer(Project.class, new FailsPartWaySerializer()));
+        ProjectJsonReaderWriterImpl failingReaderWriter =
+                new ProjectJsonReaderWriterImpl(projectsFile.toString(), failingMapper);
+
+        // Act
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> failingReaderWriter.writeJson(List.of(project1, project2)));
+
+        // Assert
+        assertThat(projectsFile).hasContent(savedJson);
+        assertThat(tempDir).isDirectoryNotContaining("glob:**.tmp");
+        assertThat(exception.getMessage())
+                .isEqualTo("Failed to write projects to " + projectsFile + ": disk full");
+    }
+
+    @Test
+    @DisabledOnOs(OS.WINDOWS)
+    void writeJson_WhenFileHasRestrictedPermissions_ShouldKeepThem() throws IOException {
+        // Arrange
+        Path projectsFile = Files.writeString(tempDir.resolve("projects.json"), "[]");
+        Set<PosixFilePermission> ownerOnly = PosixFilePermissions.fromString("rw-------");
+        Files.setPosixFilePermissions(projectsFile, ownerOnly);
+        ProjectJsonReaderWriterImpl restrictedReaderWriter =
+                new ProjectJsonReaderWriterImpl(projectsFile.toString(), objectMapper);
+
+        // Act
+        restrictedReaderWriter.writeJson(List.of(project1));
+
+        // Assert
+        assertThat(Files.getPosixFilePermissions(projectsFile)).isEqualTo(ownerOnly);
+        assertThat(restrictedReaderWriter.readJson()).hasSize(1);
+    }
+
+    @Test
+    @DisabledOnOs(OS.WINDOWS)
+    void writeJson_WhenFileIsASymbolicLink_ShouldWriteThroughTheLink() throws IOException {
+        // Arrange
+        Path realFile = Files.writeString(tempDir.resolve("real-projects.json"), "[]");
+        Path link = Files.createSymbolicLink(tempDir.resolve("projects.json"), realFile);
+        ProjectJsonReaderWriterImpl linkedReaderWriter =
+                new ProjectJsonReaderWriterImpl(link.toString(), objectMapper);
+
+        // Act
+        linkedReaderWriter.writeJson(List.of(project1));
+
+        // Assert
+        assertThat(link).isSymbolicLink();
+        assertThat(new ProjectJsonReaderWriterImpl(realFile.toString(), objectMapper).readJson())
+                .hasSize(1)
+                .usingRecursiveComparison()
+                .isEqualTo(List.of(project1));
     }
 
     @Test
@@ -278,5 +353,20 @@ class ProjectJsonReaderWriterImplTest {
         assertThat(readProject.getEase()).isEqualTo(project1.getEase());
         assertThat(readProject.getReach()).isEqualTo(project1.getReach());
         assertThat(readProject.getEffort()).isEqualTo(project1.getEffort());
+    }
+
+    /**
+     * Starts writing a project and then fails, the way a full disk fails a save after part of the
+     * JSON has already gone out.
+     */
+    private static class FailsPartWaySerializer extends JsonSerializer<Project> {
+        @Override
+        public void serialize(Project project, JsonGenerator generator, SerializerProvider serializers)
+                throws IOException {
+            generator.writeStartObject();
+            generator.writeStringField("name", project.getName());
+            generator.flush();
+            throw new IOException("disk full");
+        }
     }
 }

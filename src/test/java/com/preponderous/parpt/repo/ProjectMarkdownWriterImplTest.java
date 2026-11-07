@@ -151,6 +151,28 @@ class ProjectMarkdownWriterImplTest {
     }
 
     @Test
+    void writeMarkdown_WhenDirectoryIsMissing_ShouldThrowNamingTheFileAndReason(@TempDir Path tempDir) {
+        // Given
+        Path unwritableFile = tempDir.resolve("missing-directory").resolve("projects.md");
+        ProjectMarkdownWriterImpl unwritableWriter = new ProjectMarkdownWriterImpl(
+                unwritableFile.toString(),
+                markdownFormatter,
+                projectSorter
+        );
+        List<Project> projects = List.of(Project.builder().name("Test Project").build());
+        when(projectSorter.sortBy(projects, "ice")).thenReturn(projects);
+
+        // When
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> unwritableWriter.writeMarkdown(projects, "ice"));
+
+        // Then
+        assertEquals("Failed to write projects to " + unwritableFile + ": " + exception.getCause().getMessage(),
+                exception.getMessage());
+        assertInstanceOf(IOException.class, exception.getCause());
+    }
+
+    @Test
     void writeMarkdown_WithNullList_ShouldThrowException() {
         // When & Then
         assertThrows(IllegalArgumentException.class, 

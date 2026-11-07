@@ -55,7 +55,7 @@ public class ProjectMarkdownWriterImpl implements ProjectMarkdownWriter {
             }
 
         } catch (IOException e) {
-            throw new RuntimeException("Failed to write projects to Markdown file", e);
+            throw new RuntimeException("Failed to write projects to " + markdownFilePath + ": " + e.getMessage(), e);
         }
     }
 }
