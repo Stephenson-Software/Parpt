@@ -196,13 +196,16 @@ class ProjectJsonReaderWriterImplTest {
                 new ProjectJsonReaderWriterImpl(projectsFile.toString(), objectMapper);
 
         // Act
-        RuntimeException exception = assertThrows(RuntimeException.class, malformedFileReaderWriter::readJson);
+        ProjectsFileReadException exception =
+                assertThrows(ProjectsFileReadException.class, malformedFileReaderWriter::readJson);
 
         // Assert
         assertThat(exception.getMessage())
                 .startsWith("Failed to read projects from " + projectsFile + ": ")
                 .contains(exception.getCause().getMessage());
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
+        assertThat(exception.getProjectsFilePath()).isEqualTo(projectsFile.toString());
+        assertThat(projectsFile).hasContent("{not valid json");
     }
 
     @Test
