@@ -60,6 +60,8 @@ java -Dapp.projects.file=/path/to/projects.json -jar build/libs/Parpt-<version>.
 
 Each save is written to `projects.json.tmp` beside `projects.json` and then moved into place, so a save that fails or is interrupted leaves the previous file whole. The directory holding `projects.json` must therefore be writable, not just the file.
 
+If `projects.json` exists but cannot be read, for example after a hand edit left it as invalid JSON, Parpt does not start. Under `APPLICATION FAILED TO START` it prints `Failed to read projects from <path>: <reason>` and exits with status 1. The file is left unchanged, so it can be repaired or moved aside before starting Parpt again.
+
 Earlier versions saved `projects.json` in the directory Parpt was started from, and that file is not picked up automatically. To keep using it, move it to `~/.parpt/projects.json` or point `app.projects.file` at it.
 
 Available commands:

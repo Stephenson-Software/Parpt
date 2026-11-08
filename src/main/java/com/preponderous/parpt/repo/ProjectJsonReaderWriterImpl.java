@@ -55,7 +55,7 @@ public class ProjectJsonReaderWriterImpl implements ProjectJsonReaderWriter {
             return objectMapper.readValue(file,
                     objectMapper.getTypeFactory().constructCollectionType(List.class, Project.class));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read projects from " + projectsFilePath + ": " + e.getMessage(), e);
+            throw new ProjectsFileReadException(projectsFilePath, e);
         }
     }
 
