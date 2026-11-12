@@ -73,6 +73,8 @@ Available commands:
 - `export` - Export all projects to Markdown format, sorted by ICE score unless another order is chosen
 - `help` - Show available commands
 
+Project names are matched exactly, including capitalization and spaces. `view "my project"` does not find a project named `My Project`, and `update` and `delete` behave the same way. For the same reason, `create` accepts `my project` as a new project even when `My Project` already exists.
+
 You'll be prompted to enter:
 - Project name and description
 - Detailed scoring for each category (1-5 scale): each category asks four questions, and its score is their average, rounded to the nearest whole number
@@ -116,6 +118,14 @@ list -s impact
 ```
 
 Supported `--sort` values are `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest; omitting `--sort` keeps the order in which projects were created.
+
+With only the project made by the create examples' option-only command saved, `list --sort ice` prints:
+```text
+Projects (sorted by ice):
+- My Project: A short pitch (ICE: 60.00 | RICE: 8.00)
+```
+
+Without `--sort`, the first line is `Projects:`. When no projects are saved, `list` prints `No projects found.`
 
 ### View Examples
 ```bash

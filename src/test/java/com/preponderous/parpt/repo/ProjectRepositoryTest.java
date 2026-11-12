@@ -189,4 +189,20 @@ class ProjectRepositoryTest {
     void findByName_WithUnknownName_ShouldThrow() {
         assertThrows(ProjectRepository.ProjectNotFoundException.class, () -> repository.findByName("Missing"));
     }
+
+    // The README documents that names are matched exactly; these pin that behaviour
+    @Test
+    void findByName_ShouldNotIgnoreCaseOrSurroundingWhitespace() {
+        assertThrows(ProjectRepository.ProjectNotFoundException.class, () -> repository.findByName("alpha"));
+        assertThrows(ProjectRepository.ProjectNotFoundException.class, () -> repository.findByName(" Alpha"));
+    }
+
+    @Test
+    void add_WithNameDifferingOnlyInCase_ShouldBeAcceptedAsAnotherProject() throws Exception {
+        Project lowerCase = Project.builder().name("alpha").description("Other").build();
+
+        repository.add(lowerCase);
+
+        assertThat(repository.findAll()).containsExactly(alpha, lowerCase);
+    }
 }
