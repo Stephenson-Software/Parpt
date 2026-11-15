@@ -56,7 +56,8 @@ public class CreateProjectCommand {
         int total = 0;
         for (String prompt : prompts) {
             try {
-                int score = Integer.parseInt(readInput(prompt));
+                // Surrounding whitespace is treated as a stray keystroke, as it is for quit tokens
+                int score = Integer.parseInt(readInput(prompt).trim());
                 if (!InputValidator.isValidScore(score)) {
                     throw new InvalidScoreException("Invalid score. Must be between 1 and 5.");
                 }

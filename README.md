@@ -78,7 +78,7 @@ Project names are matched exactly, including capitalization and spaces. `view "m
 You'll be prompted to enter:
 - Project name and description
 - Detailed scoring for each category (1-5 scale): each category asks four questions, and its score is their average, rounded to the nearest whole number
-- Each answer must be a whole number from 1 to 5. Any other answer prints `Invalid score. Must be between 1 and 5.` (or `Invalid score. Must be a number between 1 and 5.` when it is not a number), and that category's four questions are asked again from the first; answers already given for it are discarded
+- Each answer must be a whole number from 1 to 5; spaces before or after it are ignored. Any other answer prints `Invalid score. Must be between 1 and 5.` (or `Invalid score. Must be a number between 1 and 5.` when it is not a number), and that category's four questions are asked again from the first; answers already given for it are discarded
 - Entering `q` or `quit` at any prompt (or pressing Ctrl-D) cancels creation without saving anything
 - Parpt will then:
     - Calculate ICE and RICE scores
