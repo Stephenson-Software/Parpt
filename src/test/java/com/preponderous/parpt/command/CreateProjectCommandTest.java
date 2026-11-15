@@ -324,6 +324,26 @@ class CreateProjectCommandTest {
     }
 
     @Test
+    void testScoreAnswerWithSurroundingWhitespaceIsAccepted() throws Exception {
+        String[] reachPrompts = promptProperties.getReach();
+        String[] paddedAnswers = {" 3 ", "3\t", "  3", "3 "};
+        for (int i = 0; i < reachPrompts.length; i++) {
+            // A second ask quits, so a rejected padded answer fails the assertion instead of looping
+            when(inputProvider.readLine(reachPrompts[i])).thenReturn(paddedAnswers[i], "q");
+        }
+
+        String output = captureStandardOutput(() -> assertEquals(
+                "Project created successfully: Padded Project\nICE Score: 125.00\nRICE Score: 15.00",
+                command.execute("Padded Project", "Padded Description", 5, 5, 5, null, 5)));
+
+        assertFalse(output.contains("Invalid score"));
+        for (String prompt : reachPrompts) {
+            verify(inputProvider, times(1)).readLine(prompt);
+        }
+        assertEquals(3, projectService.getProject("Padded Project").getReach());
+    }
+
+    @Test
     void testTakenNameAtPromptIsRejectedBeforeAnyFurtherQuestion() throws Exception {
         projectService.createProject("Existing Project", "Original Description", 1, 1, 1, 1, 1);
         when(inputProvider.readLine(promptProperties.getProjectName())).thenReturn("Existing Project");
