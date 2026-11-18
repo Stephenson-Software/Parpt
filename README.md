@@ -79,7 +79,7 @@ You'll be prompted to enter:
 - Project name and description
 - Detailed scoring for each category (1-5 scale): each category asks four questions, and its score is their average, rounded to the nearest whole number
 - Each answer must be a whole number from 1 to 5; spaces before or after it are ignored. Any other answer prints `Invalid score. Must be between 1 and 5.` (or `Invalid score. Must be a number between 1 and 5.` when it is not a number), and that category's four questions are asked again from the first; answers already given for it are discarded
-- Entering `q` or `quit` at any prompt (or pressing Ctrl-D) cancels creation without saving anything
+- Entering `q` or `quit` at any prompt (or pressing Ctrl-D) cancels creation without saving anything; capitalization and surrounding spaces are ignored, so `Q` and ` QUIT ` cancel too
 - Parpt will then:
     - Calculate ICE and RICE scores
     - Save the results to `~/.parpt/projects.json`
@@ -118,7 +118,7 @@ list --sort name
 list -s impact
 ```
 
-Supported `--sort` values are `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest; omitting `--sort` keeps the order in which projects were created. Values are not case-sensitive, so `--sort ICE` works too. Any other value prints `Invalid sort option. Use one of: name, impact, confidence, ease, reach, effort, ice, rice (or omit --sort to keep creation order).` and lists nothing.
+Supported `--sort` values are `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest; omitting `--sort` keeps the order in which projects were created. Values are not case-sensitive, so `--sort ICE` works too. Any other value prints `Invalid sort option. Use one of: name, impact, confidence, ease, reach, effort, ice, rice (or omit --sort to keep creation order).` and lists nothing. The sort value is checked only when projects are saved: with none, `list` prints `No projects found.` whatever `--sort` was given.
 
 With only the project made by the create examples' option-only command saved, `list --sort ice` prints:
 ```text
@@ -194,7 +194,7 @@ export --sort name
 export -s impact
 ```
 
-`export` accepts the same `--sort` values as `list`: `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest, and the chosen order is recorded in the exported file's header. Unlike `list`, `export` always sorts — omitting `--sort` sorts by ICE score. Any other value prints `Invalid sort option. Use one of: name, impact, confidence, ease, reach, effort, ice, rice.` and writes nothing. When no projects are saved, `export` prints `No projects found to export.` and leaves any earlier export untouched.
+`export` accepts the same `--sort` values as `list`: `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest, and the chosen order is recorded in the exported file's header. Unlike `list`, `export` always sorts — omitting `--sort` sorts by ICE score. Any other value prints `Invalid sort option. Use one of: name, impact, confidence, ease, reach, effort, ice, rice.` and writes nothing. When no projects are saved, `export` prints `No projects found to export.` and leaves any earlier export untouched, even if the `--sort` value is not a supported one.
 
 The export is written to `projects.md` in the directory Parpt was started from, replacing any earlier export there. To write it somewhere else, pass the path at startup; the directory it names must already exist:
 ```bash

@@ -119,6 +119,19 @@ class ExportProjectsCommandTest {
     }
 
     @Test
+    void execute_WithNoProjectsAndInvalidSortOption_ShouldReturnNoProjectsMessage() {
+        // Given
+        when(projectService.getProjects()).thenReturn(Collections.emptyList());
+
+        // When
+        String result = exportCommand.execute("invalid");
+
+        // Then
+        verify(markdownWriter, never()).writeMarkdown(any(), anyString());
+        assertEquals("No projects found to export.", result);
+    }
+
+    @Test
     void execute_WithInvalidSortOption_ShouldReturnErrorMessage() {
         // Given
         List<Project> projects = List.of(
