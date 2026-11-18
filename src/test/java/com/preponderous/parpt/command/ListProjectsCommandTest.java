@@ -152,6 +152,17 @@ class ListProjectsCommandTest {
     }
 
     @Test
+    void shouldReportNoProjectsRatherThanAnUnsupportedSortKeyWhenNoneExist() {
+        // Given no projects exist
+
+        // When the command is executed with an unsupported sort option
+        var result = listProjectsCommand.execute("bogus");
+
+        // Then the empty list is reported and the sort option is never checked
+        assertEquals("No projects found.", result);
+    }
+
+    @Test
     void shouldExposeLsAsAnAliasForTheListCommand() throws NoSuchMethodException {
         // Given the shell method backing the list command
         ShellMethod shellMethod = ListProjectsCommand.class
