@@ -25,6 +25,7 @@ import java.nio.file.Paths;
  * projects themselves is sent: no names, descriptions, scores, paths or hostnames.
  *
  * <p>Reporting is on by default and switched off with {@code usage-reporting.enabled=false}
+ * (or any value but {@code true}, {@code on}, {@code yes} or {@code 1}, blank included)
  * (as a {@code -D} system property, in an {@code application.yaml} next to the JAR, or as
  * {@code USAGE_REPORTING_ENABLED=false} in the environment), or with the environment variables
  * every trace client honours, {@code TRACE_USAGE_REPORTING=off} and {@code DO_NOT_TRACK=1},
@@ -91,8 +92,10 @@ public class UsageReporter {
 
     private static TraceClient buildClient(String enabled, String endpoint, String key, String version,
                                            File installIdFile) {
-        // A blank value (an empty environment variable, say) means "default", i.e. on.
-        boolean on = enabled == null || enabled.isBlank() || !"false".equalsIgnoreCase(enabled.trim());
+        // Fails closed through the client's helper: only true/on/yes/1 keeps reporting on, so
+        // off, no, 0, a typo or a blank value (USAGE_REPORTING_ENABLED= set empty by an operator)
+        // turn it off. The default "true" applies only when the property is not set at all.
+        boolean on = TraceClient.allowsReporting(enabled);
         // The program's own switch goes to the builder rather than short-circuiting here, so
         // the client applies its precedence (environment first).
         return TraceClient.builder(endpoint, APPLICATION, version)
