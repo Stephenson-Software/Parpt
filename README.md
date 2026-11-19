@@ -221,8 +221,10 @@ To turn it off, any one of these is enough:
 
 - `java -Dusage-reporting.enabled=false -jar build/libs/Parpt-<version>.jar`
 - `USAGE_REPORTING_ENABLED=false` in the environment
-- `TRACE_USAGE_REPORTING=off` (also `false`, `0`, `no`) in the environment — the switch every trace client honours, checked before Parpt's own setting
-- `DO_NOT_TRACK=1` (also `true`, `yes`) in the environment, per [consoledonottrack.com](https://consoledonottrack.com)
+- `TRACE_USAGE_REPORTING=off` in the environment — the switch every trace client honours, checked before Parpt's own setting
+- `DO_NOT_TRACK=1` in the environment, per [consoledonottrack.com](https://consoledonottrack.com)
+
+Every switch fails closed. `usage-reporting.enabled` defaults to `true` when it is not set at all, and otherwise keeps reporting on only when it is `true`, `on`, `yes` or `1`; `false`, `off`, `no`, `0`, a typo or a blank value (`USAGE_REPORTING_ENABLED=` set empty) turn it off. `TRACE_USAGE_REPORTING` set to anything but blank, `true`, `on`, `yes` or `1` turns reporting off, and so does `DO_NOT_TRACK` set to anything but blank, `0`, `false`, `off` or `no`.
 
 The key under `usage-reporting.key` in `application.yaml` is the write key issued to Parpt; it can only add usage events and is not secret.
 

@@ -152,8 +152,8 @@ class UsageReporterTest {
     }
 
     @Test
-    void onlyFalseIgnoringCaseAndSpacesSwitchesReportingOff(@TempDir Path home) {
-        for (String off : new String[] {"false", "FALSE", " False "}) {
+    void anythingButAnOnValueSwitchesReportingOff(@TempDir Path home) {
+        for (String off : new String[] {"false", "FALSE", " False ", "off", "OFF", "no", "0", "disabled", "flase", null, "", "  "}) {
             UsageReporter reporter = new UsageReporter(off, endpoint, "a-key", "1.0", home.resolve("marker"));
             reporter.close();
             assertFalse(reporter.isEnabled(), "'" + off + "' switches reporting off");
@@ -161,7 +161,7 @@ class UsageReporterTest {
         if (environmentOptsOut()) {
             return;
         }
-        for (String on : new String[] {null, "", "  ", "true", "no", "0"}) {
+        for (String on : new String[] {"true", " TRUE ", "on", "yes", "1"}) {
             UsageReporter reporter = new UsageReporter(on, endpoint, "a-key", "1.0", home.resolve("marker"));
             reporter.close();
             assertTrue(reporter.isEnabled(), "'" + on + "' leaves reporting on");
