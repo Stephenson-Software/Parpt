@@ -224,7 +224,7 @@ To turn it off, any one of these is enough:
 - `TRACE_USAGE_REPORTING=off` in the environment — the switch every trace client honours, checked before Parpt's own setting
 - `DO_NOT_TRACK=1` in the environment, per [consoledonottrack.com](https://consoledonottrack.com)
 
-Every switch fails closed. `usage-reporting.enabled` defaults to `true` when it is not set at all, and otherwise keeps reporting on only when it is `true`, `on`, `yes` or `1`; `false`, `off`, `no`, `0`, a typo or a blank value (`USAGE_REPORTING_ENABLED=` set empty) turn it off. `TRACE_USAGE_REPORTING` set to anything but blank, `true`, `on`, `yes` or `1` turns reporting off, and so does `DO_NOT_TRACK` set to anything but blank, `0`, `false`, `off` or `no`.
+Every switch fails closed. `usage-reporting.enabled` defaults to `true` when it is not set at all, and otherwise keeps reporting on only when it is `true`, `on`, `yes` or `1`; `false`, `off`, `no`, `0`, a typo or a blank value (`USAGE_REPORTING_ENABLED=` set empty) turn it off. `TRACE_USAGE_REPORTING` set to anything but blank, `true`, `on`, `yes` or `1` turns reporting off, and so does `DO_NOT_TRACK` set to anything but blank, `0`, `false`, `off` or `no`. Other spellings count as off too: `usage_reporting.enable=false`, `usage-reporting.disabled=true`, `usage-reporting=false` or `USAGE_REPORTING=off` (in an `application.yaml`, as `-D` or in the environment) turn reporting off even though Spring does not bind them to `usage-reporting.enabled`.
 
 The key under `usage-reporting.key` in `application.yaml` is the write key issued to Parpt; it can only add usage events and is not secret.
 

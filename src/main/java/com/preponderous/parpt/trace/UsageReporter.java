@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -53,6 +54,8 @@ public class UsageReporter {
     static final String UNKNOWN_VERSION = "unknown";
     /** The reason given when the endpoint, application name or version could not build a client. */
     static final String INVALID_CONFIGURATION = "invalid usage-reporting configuration";
+    /** The program's own switch, as Spring binds it. */
+    static final String SWITCH = "usage-reporting.enabled";
 
     private final TraceClient client;
     private final boolean invalidConfiguration;
@@ -62,8 +65,22 @@ public class UsageReporter {
     public UsageReporter(
             @Value("${usage-reporting.enabled:true}") String enabled,
             @Value("${usage-reporting.endpoint:https://trace.danielstephenson.dev}") String endpoint,
-            @Value("${usage-reporting.key:}") String key) {
-        this(enabled, endpoint, key, resolveVersion(), defaultNoticeMarker());
+            @Value("${usage-reporting.key:}") String key,
+            Environment environment) {
+        this(switchOrNearMissOptOut(enabled, environment), endpoint, key, resolveVersion(), defaultNoticeMarker());
+    }
+
+    /**
+     * The switch as Spring resolved it, or "false" when an opt-out is written under another name
+     * (see {@link NearMissOptOut}), which Spring would not bind to the switch at all.
+     */
+    static String switchOrNearMissOptOut(String enabled, Environment environment) {
+        String nearMiss = NearMissOptOut.find(environment, SWITCH);
+        if (nearMiss != null) {
+            log.debug("Usage reporting is off: {} is read as an opt-out.", nearMiss);
+            return "false";
+        }
+        return enabled;
     }
 
     UsageReporter(String enabled, String endpoint, String key, String version, Path noticeMarker) {
