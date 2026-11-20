@@ -96,6 +96,21 @@ class ListProjectsCommandTest {
     }
 
     @Test
+    void shouldKeepCreationOrderWhenNoneIsTypedAsTheSortValue() throws ProjectRepository.NameTakenException {
+        // Given projects are created out of alphabetical and score order
+        projectService.createProject("Zebra", "Created first", 1, 1, 1, 1, 1);
+        projectService.createProject("Apple", "Created second", 5, 5, 5, 5, 1);
+
+        // When the user types --sort none, in a capitalization other than the default's
+        var result = listProjectsCommand.execute("NONE");
+
+        // Then it is accepted like an omitted --sort: creation order under the unqualified header
+        assertFalse(result.contains("Invalid sort option"));
+        assertTrue(result.startsWith("Projects:\n"));
+        assertTrue(result.indexOf("Zebra") < result.indexOf("Apple"));
+    }
+
+    @Test
     void shouldSortByNameWhenNameSortIsRequested() throws ProjectRepository.NameTakenException {
         // Given projects are created out of alphabetical order
         projectService.createProject("Zebra", "Created first", 1, 1, 1, 1, 1);

@@ -118,7 +118,7 @@ list --sort name
 list -s impact
 ```
 
-Supported `--sort` values are `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest; omitting `--sort` keeps the order in which projects were created. Values are not case-sensitive, so `--sort ICE` works too. Any other value prints `Invalid sort option. Use one of: name, impact, confidence, ease, reach, effort, ice, rice (or omit --sort to keep creation order).` and lists nothing. The sort value is checked only when projects are saved: with none, `list` prints `No projects found.` whatever `--sort` was given.
+Supported `--sort` values are `name`, `impact`, `confidence`, `ease`, `reach`, `effort`, `ice` and `rice`. Every value except `name` sorts from highest to lowest; omitting `--sort` keeps the order in which projects were created. Values are not case-sensitive, so `--sort ICE` works too. `--sort none` is also accepted, in any capitalization, and does the same as omitting `--sort`: creation order under a plain `Projects:` header. Any other value prints `Invalid sort option. Use one of: name, impact, confidence, ease, reach, effort, ice, rice (or omit --sort to keep creation order).` and lists nothing. The sort value is checked only when projects are saved: with none, `list` prints `No projects found.` whatever `--sort` was given.
 
 With only the project made by the create examples' option-only command saved, `list --sort ice` prints:
 ```text
